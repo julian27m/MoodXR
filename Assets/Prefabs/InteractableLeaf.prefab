@@ -634,9 +634,9 @@ MonoBehaviour:
   _vectorProperties: []
   _colorProperties:
   - name: _Color
-    value: {r: 1, g: 0.8895351, b: 0, a: 1}
+    value: {r: 0.101891756, g: 1, b: 0, a: 1}
   - name: _BaseColor
-    value: {r: 1, g: 0.8895351, b: 0, a: 1}
+    value: {r: 0.06772339, g: 1, b: 0, a: 1}
   _floatProperties: []
   _updateEveryFrame: 1
 --- !u!1 &5070664442195528803
@@ -1352,7 +1352,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _travellingData:
-    _travelSpeed: 10
+    _travelSpeed: 5
     _useFixedTravelTime: 0
     _travelCurve:
       serializedVersion: 2

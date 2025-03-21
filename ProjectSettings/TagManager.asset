@@ -19,6 +19,7 @@ TagManager:
   - LeftHand
   - RightHand
   - Collider
+  - firefly
   layers:
   - Default
   - TransparentFX
