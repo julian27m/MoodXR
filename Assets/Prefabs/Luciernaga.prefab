@@ -121,9 +121,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 67d5c66586cfbef489536fc1ab8e89bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 0.5
+  speed: 0.2
   emergingSpeed: 0.2
-  moveRadius: 1.5
+  moveRadius: 1
   playerRadius: 3
   hoverTime: 3
   player: {fileID: 0}
