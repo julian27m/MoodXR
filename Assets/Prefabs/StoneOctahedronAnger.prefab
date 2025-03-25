@@ -146,6 +146,11 @@ PrefabInstance:
     - target: {fileID: 8997596007113485466, guid: 63b105a6ee122134295e170669579854,
         type: 3}
       propertyPath: m_Mass
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 8997596007113485466, guid: 63b105a6ee122134295e170669579854,
+        type: 3}
+      propertyPath: m_Interpolate
       value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []

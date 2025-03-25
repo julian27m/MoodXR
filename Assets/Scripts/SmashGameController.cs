@@ -22,6 +22,8 @@ public class SmashGameController : MonoBehaviour
     [SerializeField] private Vector3 spawnAreaMax = new Vector3(0.66900003f, 0.774800003f, 0.86559999f);
 
     [Header("Audio")]
+    [SerializeField, Range(0f, 1f), Tooltip("Volumen general para todos los sonidos")]
+    private float soundVolume = 1.0f;
     [SerializeField] private AudioClip mugAudio;
     [SerializeField] private AudioClip plantAudio;
     [SerializeField] private AudioClip guitarAudio;
@@ -252,7 +254,7 @@ public class SmashGameController : MonoBehaviour
         // Reproducir el sonido si hay un clip asignado
         if (clipToPlay != null)
         {
-            audioSource.PlayOneShot(clipToPlay);
+            audioSource.PlayOneShot(clipToPlay, soundVolume);
         }
     }
 }
