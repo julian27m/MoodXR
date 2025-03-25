@@ -20,6 +20,18 @@ TagManager:
   - RightHand
   - Collider
   - firefly
+  - QDSUISection
+  - QDSUIToggleCheckboxRadio
+  - QDSUITextInputField
+  - SamplesInfoPanel
+  - Bat
+  - Mug
+  - Plant
+  - Guitar
+  - Car
+  - Bottle
+  - Computer
+  - Stone
   layers:
   - Default
   - TransparentFX

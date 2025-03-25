@@ -14,7 +14,6 @@ GameObject:
   - component: {fileID: 6895848671196600472}
   - component: {fileID: 2888054029184908034}
   - component: {fileID: 5550561444523662873}
-  - component: {fileID: 6464268446072383523}
   - component: {fileID: 3911079563968454441}
   m_Layer: 0
   m_Name: Leaf
@@ -52,7 +51,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   blockId: 7358e191-33b7-43ca-b066-b2f00531ac66
-  instanceId: 6ab92b86-871b-4de0-8591-5d53e848fe06
+  instanceId: d6144165-5db0-43b8-b404-2eb385d6312f
   version: 1
   installationRoutineCheckpoint:
     _installationRoutineId: 
@@ -156,25 +155,6 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: -2885676630766479320, guid: 6929c6ce43d07d2448df0bad7fa706f7, type: 3}
---- !u!114 &6464268446072383523
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 857259924673442733}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 021e8e64003649c489c428fa5d09e316, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  target1: {fileID: 0}
-  target2: {fileID: 0}
-  moveSpeed1: 2
-  moveSpeed2: 1
-  detectionThreshold: 0.01
-  arrivalDistance: 0.05
-  distanceHandGrabObject: {fileID: 0}
 --- !u!114 &3911079563968454441
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -246,7 +226,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   blockId: 3f1827c2-c682-46d8-999e-0954e37e833e
-  instanceId: 7486f812-e6ee-4cd3-aebb-5cbc591b9434
+  instanceId: 7b1f3ffe-6da7-4372-97d9-82dd60c29c1a
   version: 1
   installationRoutineCheckpoint:
     _installationRoutineId: 20b9ad69-c205-488d-a6b2-d3d7ca6c1e53
