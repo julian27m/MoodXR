@@ -11,7 +11,7 @@ EditorBuildSettings:
   - enabled: 0
     path: "Assets/Samples/Meta XR Interaction \u200BSDK/72.0.0/Example Scenes/TransformerExamples.unity"
     guid: 7475942f60c376744ba1ec487d140105
-  - enabled: 0
+  - enabled: 1
     path: "Assets/Samples/Meta XR Interaction \u200BSDK/72.0.0/Example Scenes/Anger.unity"
     guid: bd09987826fee754ca755a2933bd4684
   - enabled: 1

@@ -15,6 +15,7 @@ public class ReactionButtonGame : MonoBehaviour
     [SerializeField] private float maxTimeToChange = 4f; // Tiempo máximo antes de cambiar a activo
     [SerializeField] private bool addPointOnDeactivation = true; // ¿Añadir punto cuando el botón se desactiva?
 
+
     [Header("Referencias")]
     [SerializeField] private Renderer buttonRenderer; // Renderer para cambiar el material
 
@@ -324,6 +325,7 @@ public class ReactionButtonGame : MonoBehaviour
         isInactive = true;
         wasActive = false;
         UpdateButtonVisual();
+
 
         Debug.Log("¡Juego terminado en: " + gameObject.name + "!");
     }
