@@ -42,6 +42,9 @@ public class SmashGameController : MonoBehaviour
     private Dictionary<Rigidbody, int> sleepCountdowns = new Dictionary<Rigidbody, int>();
     private AudioSource audioSource;
 
+    // Nuevo diccionario para llevar registro de los objetos ya golpeados
+    private HashSet<GameObject> hitObjects = new HashSet<GameObject>();
+
     private void Awake()
     {
         // Añadir un AudioSource si no existe
@@ -80,6 +83,7 @@ public class SmashGameController : MonoBehaviour
             gameRunning = true;
             score = 0;
             scoreText.text = "0";
+            hitObjects.Clear(); // Limpiar la lista de objetos golpeados
 
             // Iniciar la cuenta atrás y el spawner
             StartCoroutine(GameTimer());
@@ -103,6 +107,7 @@ public class SmashGameController : MonoBehaviour
             obj.SetActive(false);
         }
         activeObjects.Clear();
+        hitObjects.Clear(); // Limpiar la lista de objetos golpeados
 
         // Aquí podrías añadir lo que sucede al final del juego
         Debug.Log("Juego terminado. Puntuación final: " + score);
@@ -165,6 +170,9 @@ public class SmashGameController : MonoBehaviour
                 {
                     activeObjects.Add(objectToSpawn);
                 }
+
+                // Asegurarse de que el objeto no está en la lista de ya golpeados
+                hitObjects.Remove(objectToSpawn);
             }
         }
     }
@@ -206,18 +214,14 @@ public class SmashGameController : MonoBehaviour
             if (obj.activeSelf && obj.transform.position.y < fallThreshold)
             {
                 // El objeto ha caído por debajo del umbral
-                HandleFallenObject(obj);
+                RemoveFallenObject(obj);
             }
         }
     }
 
-    private void HandleFallenObject(GameObject obj)
+    private void RemoveFallenObject(GameObject obj)
     {
-        // Incrementar puntuación
-        score++;
-        scoreText.text = score.ToString();
-
-        // Desactivar objeto
+        // Ya no incrementamos puntuación aquí, solo desactivamos el objeto
         obj.SetActive(false);
         activeObjects.Remove(obj);
     }
@@ -227,6 +231,18 @@ public class SmashGameController : MonoBehaviour
     {
         if (gameRunning && hitter.CompareTag("Bat"))
         {
+            // Solo sumamos puntos si el objeto no ha sido golpeado antes en esta aparición
+            if (!hitObjects.Contains(hitObject))
+            {
+                // Incrementar puntuación
+                score++;
+                scoreText.text = score.ToString();
+
+                // Añadir a la lista de objetos ya golpeados para no sumar puntos múltiples
+                hitObjects.Add(hitObject);
+            }
+
+            // Reproducir el sonido correspondiente
             PlaySoundBasedOnTag(hitObject);
         }
     }

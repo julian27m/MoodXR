@@ -6,7 +6,7 @@ public class CountdownTimer : MonoBehaviour
 {
     [SerializeField] public TextMeshPro timerText;
     [SerializeField] public float totalTime = 60f; // 1 minuto en segundos
-    [SerializeField] public GameObject StartButton;
+    [SerializeField] public GameObject NextButton;
 
     private bool isRunning = false;
     private float timeRemaining;
@@ -64,7 +64,7 @@ public class CountdownTimer : MonoBehaviour
         isRunning = false;
         timerText.text = "0:00";
 
-        StartButton.gameObject.SetActive(true);
+        NextButton.gameObject.SetActive(true);
 
         // Llamar a otro método para finalizar el mini juego
         // FinishMiniGame();
