@@ -17,6 +17,9 @@ EditorBuildSettings:
   - enabled: 1
     path: "Assets/Samples/Meta XR Interaction \u200BSDK/72.0.0/Example Scenes/AngerTwo.unity"
     guid: 30ab295aa36e0c04c816ef340184861e
+  - enabled: 1
+    path: "Assets/Samples/Meta XR Interaction \u200BSDK/72.0.0/Example Scenes/AngerThree.unity"
+    guid: 112cd5e374cbfac45bbf8c8515d6e90b
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: 2db4b602c38424b4195662fa3cbd258e,
       type: 2}
