@@ -18,6 +18,7 @@ public class LeafReleaseDetector : MonoBehaviour
     [SerializeField] private GameObject[] gameObjectsToDisable;
 
     private Rigidbody rb;
+    private int leafInstanceID;
     private bool animationStarted = false;
     private Vector3 lastFramePosition;
     private Vector3 lastHandPosition;
@@ -29,6 +30,8 @@ public class LeafReleaseDetector : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         lastFramePosition = transform.position;
+
+        leafInstanceID = GetInstanceID();
 
         // Ensure targets are assigned
         if (target1 == null || target2 == null)
@@ -51,8 +54,14 @@ public class LeafReleaseDetector : MonoBehaviour
 
         if (movement > 0.001f) // Object is moving
         {
-            // If it's moving, consider it grabbed
-            wasGrabbed = true;
+            // Si es la primera vez que se detecta que fue agarrada
+            if (!wasGrabbed)
+            {
+                wasGrabbed = true;
+                // Registrar en telemetría que se agarró la hoja
+                TelemetriaManager.Instance.RegistrarHojaAgarrada(leafInstanceID);
+            }
+
             releaseTimer = 0f; // Reset release timer
             lastHandPosition = transform.position;
         }
@@ -102,6 +111,8 @@ public class LeafReleaseDetector : MonoBehaviour
     void StartLeafAnimation()
     {
         if (animationStarted) return; // Prevent double activation
+
+        TelemetriaManager.Instance.RegistrarHojaSoltada(leafInstanceID);
 
         Debug.Log("Starting leaf animation sequence");
         animationStarted = true;

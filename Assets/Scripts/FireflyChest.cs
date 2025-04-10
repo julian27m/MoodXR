@@ -55,6 +55,7 @@ public class FireflyChest : MonoBehaviour
     void OpenChest()
     {
         isOpen = true;
+        TelemetriaManager.Instance.RegistrarAperturaCaja();
         Debug.Log("Método OpenChest() ejecutado. Luciérnagas a liberar: " + fireflies.Length);
 
         if (narrationAudio != null && !narrationAudio.isPlaying)
