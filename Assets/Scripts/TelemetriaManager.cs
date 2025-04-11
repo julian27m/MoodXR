@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -106,11 +106,11 @@ public class TelemetriaManager : MonoBehaviour
             }
 
             isLogFileCreated = true;
-            Debug.Log($"Archivo de telemetría creado en: {logFilePath}");
+            Debug.Log($"Archivo de telemetrï¿½a creado en: {logFilePath}");
         }
         catch (Exception e)
         {
-            Debug.LogError($"Error al crear archivo de telemetría: {e.Message}");
+            Debug.LogError($"Error al crear archivo de telemetrï¿½a: {e.Message}");
         }
     }
 
@@ -128,7 +128,7 @@ public class TelemetriaManager : MonoBehaviour
             SaveLogBuffer();
         }
 
-        Debug.Log($"[TELEMETRÍA] {evento}: {datos}");
+        Debug.Log($"[TELEMETRï¿½A] {evento}: {datos}");
     }
 
     private void SaveLogBuffer()
@@ -147,19 +147,19 @@ public class TelemetriaManager : MonoBehaviour
         }
         catch (Exception e)
         {
-            Debug.LogError($"Error al guardar datos de telemetría: {e.Message}");
+            Debug.LogError($"Error al guardar datos de telemetrï¿½a: {e.Message}");
         }
     }
 
     private void OnApplicationQuit()
     {
-        // Si el primer fin no fue activado, registrarlo aquí
+        // Si el primer fin no fue activado, registrarlo aquï¿½
         if (!primerFinActivado)
         {
             RegistrarPrimerFin();
         }
 
-        // Si el segundo fin no fue activado, registrarlo aquí
+        // Si el segundo fin no fue activado, registrarlo aquï¿½
         if (tiempoSegundoFin == 0f)
         {
             RegistrarSegundoFin();
@@ -222,28 +222,28 @@ public class TelemetriaManager : MonoBehaviour
         if (hojasAgarradas > 0)
         {
             resumen.AppendLine($"Tiempo hasta primera hoja: {tiempoPrimeraHoja} segundos");
-            resumen.AppendLine($"Tiempo promedio de interacción con hoja: {tiempoPromedioInteraccionHojas} segundos");
+            resumen.AppendLine($"Tiempo promedio de interacciï¿½n con hoja: {tiempoPromedioInteraccionHojas} segundos");
         }
 
         // Resumen Botones de Fin
         resumen.AppendLine("\nCIERRE DE EXPERIENCIA:");
         if (primerFinActivado)
         {
-            resumen.AppendLine($"Tiempo hasta primer botón de fin: {tiempoPrimerFin} segundos");
+            resumen.AppendLine($"Tiempo hasta primer botï¿½n de fin: {tiempoPrimerFin} segundos");
 
             if (tiempoSegundoFin > 0f)
             {
-                resumen.AppendLine($"Tiempo hasta segundo botón de fin: {tiempoSegundoFin} segundos");
+                resumen.AppendLine($"Tiempo hasta segundo botï¿½n de fin: {tiempoSegundoFin} segundos");
                 resumen.AppendLine($"Tiempo entre primer y segundo fin: {tiempoEntreFines} segundos");
             }
             else
             {
-                resumen.AppendLine("El segundo botón de fin no fue activado");
+                resumen.AppendLine("El segundo botï¿½n de fin no fue activado");
             }
         }
         else
         {
-            resumen.AppendLine("Ningún botón de fin fue activado (la aplicación se cerró de otra manera)");
+            resumen.AppendLine("Ningï¿½n botï¿½n de fin fue activado (la aplicaciï¿½n se cerrï¿½ de otra manera)");
         }
 
         // Resumen de botones de audio
@@ -257,25 +257,25 @@ public class TelemetriaManager : MonoBehaviour
             resumen.AppendLine($"  Veces activado: {vecesAudioHojas}");
             if (vecesAudioHojas > 0)
             {
-                resumen.AppendLine($"  Tiempos de activación (segundos): {String.Join(", ", tiemposAudioHojas)}");
+                resumen.AppendLine($"  Tiempos de activaciï¿½n (segundos): {String.Join(", ", tiemposAudioHojas)}");
             }
 
             resumen.AppendLine("\nAudio Fogata:");
             resumen.AppendLine($"  Veces activado: {vecesAudioFogata}");
             if (vecesAudioFogata > 0)
             {
-                resumen.AppendLine($"  Tiempos de activación (segundos): {String.Join(", ", tiemposAudioFogata)}");
+                resumen.AppendLine($"  Tiempos de activaciï¿½n (segundos): {String.Join(", ", tiemposAudioFogata)}");
             }
 
-            resumen.AppendLine("\nAudio Respiración:");
+            resumen.AppendLine("\nAudio Respiraciï¿½n:");
             resumen.AppendLine($"  Veces activado: {vecesAudioRespiracion}");
             if (vecesAudioRespiracion > 0)
             {
-                resumen.AppendLine($"  Tiempos de activación (segundos): {String.Join(", ", tiemposAudioRespiracion)}");
+                resumen.AppendLine($"  Tiempos de activaciï¿½n (segundos): {String.Join(", ", tiemposAudioRespiracion)}");
             }
 
-            // Determinar secuencia de activación de audios
-            resumen.AppendLine("\nSecuencia de audio según primer uso:");
+            // Determinar secuencia de activaciï¿½n de audios
+            resumen.AppendLine("\nSecuencia de audio segï¿½n primer uso:");
             List<KeyValuePair<string, float>> secuencia = new List<KeyValuePair<string, float>>();
 
             if (audioHojasActivado && tiemposAudioHojas.Count > 0)
@@ -285,7 +285,7 @@ public class TelemetriaManager : MonoBehaviour
                 secuencia.Add(new KeyValuePair<string, float>("Fogata", tiemposAudioFogata[0]));
 
             if (audioRespiracionActivado && tiemposAudioRespiracion.Count > 0)
-                secuencia.Add(new KeyValuePair<string, float>("Respiración", tiemposAudioRespiracion[0]));
+                secuencia.Add(new KeyValuePair<string, float>("Respiraciï¿½n", tiemposAudioRespiracion[0]));
 
             secuencia.Sort((x, y) => x.Value.CompareTo(y.Value));
 
@@ -296,7 +296,7 @@ public class TelemetriaManager : MonoBehaviour
         }
         else
         {
-            resumen.AppendLine("No se activó ningún audio de instrucciones");
+            resumen.AppendLine("No se activï¿½ ningï¿½n audio de instrucciones");
         }
 
         // Guardar resumen
@@ -304,7 +304,7 @@ public class TelemetriaManager : MonoBehaviour
         SaveLogBuffer();
     }
 
-    // ==== Métodos públicos para registrar eventos desde otros scripts ====
+    // ==== Mï¿½todos pï¿½blicos para registrar eventos desde otros scripts ====
 
     // Eventos de la caja
     public void RegistrarAperturaCaja()
@@ -320,10 +320,10 @@ public class TelemetriaManager : MonoBehaviour
     // Eventos de la fogata
     public void RegistrarPiedraColocada(int totalPiedras)
     {
-        // No registrar nada hasta que el sistema esté listo
+        // No registrar nada hasta que el sistema estï¿½ listo
         if (!isLogReady) return;
 
-        // Solo registrar cuando cambia el número de piedras
+        // Solo registrar cuando cambia el nï¿½mero de piedras
         if (totalPiedras != piedrasColocadas)
         {
             int piedrasAnteriores = piedrasColocadas;
@@ -383,7 +383,7 @@ public class TelemetriaManager : MonoBehaviour
                 Log("PRIMERA_HOJA", $"Tiempo: {tiempoPrimeraHoja}");
             }
 
-            Log("HOJA_AGARRADA", $"Número: {hojasAgarradas}, InstanceID: {instanceID}, Tiempo: {tiempoActual}");
+            Log("HOJA_AGARRADA", $"Nï¿½mero: {hojasAgarradas}, InstanceID: {instanceID}, Tiempo: {tiempoActual}");
         }
     }
 
@@ -457,7 +457,7 @@ public class TelemetriaManager : MonoBehaviour
         vecesAudioHojas++;
         tiemposAudioHojas.Add(tiempoActual);
 
-        Log("AUDIO_HOJAS", $"Activación #{vecesAudioHojas}, Tiempo: {tiempoActual}");
+        Log("AUDIO_HOJAS", $"Activaciï¿½n #{vecesAudioHojas}, Tiempo: {tiempoActual}");
 
         // Si es la primera vez que se activa este audio
         if (!audioHojasActivado)
@@ -488,7 +488,7 @@ public class TelemetriaManager : MonoBehaviour
         vecesAudioFogata++;
         tiemposAudioFogata.Add(tiempoActual);
 
-        Log("AUDIO_FOGATA", $"Activación #{vecesAudioFogata}, Tiempo: {tiempoActual}");
+        Log("AUDIO_FOGATA", $"Activaciï¿½n #{vecesAudioFogata}, Tiempo: {tiempoActual}");
 
         // Si es la primera vez que se activa este audio
         if (!audioFogataActivado)
@@ -519,7 +519,7 @@ public class TelemetriaManager : MonoBehaviour
         vecesAudioRespiracion++;
         tiemposAudioRespiracion.Add(tiempoActual);
 
-        Log("AUDIO_RESPIRACION", $"Activación #{vecesAudioRespiracion}, Tiempo: {tiempoActual}");
+        Log("AUDIO_RESPIRACION", $"Activaciï¿½n #{vecesAudioRespiracion}, Tiempo: {tiempoActual}");
 
         // Si es la primera vez que se activa este audio
         if (!audioRespiracionActivado)
@@ -529,14 +529,14 @@ public class TelemetriaManager : MonoBehaviour
             // Si este es el primer audio activado de todos
             if (string.IsNullOrEmpty(nombrePrimerAudio))
             {
-                nombrePrimerAudio = "Respiración";
+                nombrePrimerAudio = "Respiraciï¿½n";
                 tiempoPrimerAudio = tiempoActual;
-                Log("PRIMER_AUDIO", $"Audio Respiración, Tiempo: {tiempoActual}");
+                Log("PRIMER_AUDIO", $"Audio Respiraciï¿½n, Tiempo: {tiempoActual}");
             }
         }
     }
 
-    // Para registrar eventos genéricos
+    // Para registrar eventos genï¿½ricos
     public void RegistrarEvento(string nombreEvento, string datos)
     {
         if (!isLogReady && nombreEvento != "INICIO_APLICACION")
