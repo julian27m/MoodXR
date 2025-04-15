@@ -1,0 +1,330 @@
+Timestamp,TiempoDesdeInicio,Evento,Datos
+2025-04-15 15:12:37.293,0,INICIO_APLICACION,
+2025-04-15 15:12:39.782,2,180383,INICIO_COLLIDER_ARBOL,Tiempo desde inicio: 2,18 segundos
+2025-04-15 15:12:40.615,3,013355,CONTINUE_COLLIDER_ARBOL,Tiempo acumulado: 0,00 segundos
+2025-04-15 15:12:40.825,3,22196,FIN_COLLIDER_ARBOL,Duración: 1,04 segundos, Acumulado: 1,04 segundos
+2025-04-15 15:12:43.628,6,024725,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:12:46.641,9,038447,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:12:49.655,12,05159,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:12:50.767,13,16639,INICIO_COLLIDER_ARBOL,Tiempo desde inicio: 13,17 segundos
+2025-04-15 15:12:52.668,15,06566,CONTINUE_COLLIDER_ARBOL,Tiempo acumulado: 1,04 segundos
+2025-04-15 15:12:53.060,15,45821,FIN_COLLIDER_ARBOL,Duración: 2,29 segundos, Acumulado: 3,33 segundos
+2025-04-15 15:12:55.696,18,09306,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:12:57.640,20,03735,INICIO_COLLIDER_FOGATA,Tiempo desde inicio: 20,04 segundos
+2025-04-15 15:12:58.474,20,87102,FIN_COLLIDER_FOGATA,Duración: 0,83 segundos, Acumulado: 0,83 segundos
+2025-04-15 15:12:58.585,20,98211,INICIO_COLLIDER_CAJA,Tiempo desde inicio: 20,98 segundos
+2025-04-15 15:12:58.724,21,12089,CONTINUE_COLLIDER_CAJA,Tiempo acumulado: 0,00 segundos
+2025-04-15 15:12:59.003,21,40211,FIN_COLLIDER_CAJA,Duración: 0,42 segundos, Acumulado: 0,42 segundos
+2025-04-15 15:12:59.444,21,84277,INICIO_COLLIDER_ARBOL,Tiempo desde inicio: 21,84 segundos
+2025-04-15 15:13:00.598,22,99545,FIN_COLLIDER_ARBOL,Duración: 1,15 segundos, Acumulado: 4,49 segundos
+2025-04-15 15:13:01.056,23,45324,INICIO_COLLIDER_CAJA,Tiempo desde inicio: 23,45 segundos
+2025-04-15 15:13:01.708,24,10625,FIN_COLLIDER_CAJA,Duración: 0,65 segundos, Acumulado: 1,07 segundos
+2025-04-15 15:13:01.737,24,13383,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:13:04.737,27,13399,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:13:05.041,27,43884,INICIO_COLLIDER_CAJA,Tiempo desde inicio: 27,44 segundos
+2025-04-15 15:13:05.153,27,55001,FIN_COLLIDER_CAJA,Duración: 0,11 segundos, Acumulado: 1,18 segundos
+2025-04-15 15:13:05.472,27,87004,INICIO_COLLIDER_ARBOL,Tiempo desde inicio: 27,87 segundos
+2025-04-15 15:13:05.764,28,16132,FIN_COLLIDER_ARBOL,Duración: 0,29 segundos, Acumulado: 4,78 segundos
+2025-04-15 15:13:05.972,28,36972,INICIO_COLLIDER_RESPIRACION,Tiempo desde inicio: 28,37 segundos
+2025-04-15 15:13:06.055,28,45331,FIN_COLLIDER_RESPIRACION,Duración: 0,08 segundos, Acumulado: 0,08 segundos
+2025-04-15 15:13:06.334,28,7313,INICIO_COLLIDER_ARBOL,Tiempo desde inicio: 28,73 segundos
+2025-04-15 15:13:06.518,28,9154,FIN_COLLIDER_ARBOL,Duración: 0,18 segundos, Acumulado: 4,96 segundos
+2025-04-15 15:13:07.749,30,14799,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:13:08.211,30,56438,AUDIO_FOGATA,Activación #1, Tiempo: 30,56438
+2025-04-15 15:13:08.212,30,56438,PRIMER_AUDIO,Audio Fogata, Tiempo: 30,56438
+2025-04-15 15:13:10.778,33,17495,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:13:13.778,36,17516,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:13:16.791,39,18813,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:13:18.151,40,5493,PIEDRAS_COLOCADAS,Cambio de 0 a 1
+2025-04-15 15:13:18.152,40,5493,PRIMERA_PIEDRA,Tiempo: 40,5493
+2025-04-15 15:13:19.805,42,20226,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:13:22.833,45,22984,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:13:25.861,48,25736,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:13:28.888,51,28523,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:13:29.555,51,95222,PIEDRAS_COLOCADAS,Cambio de 1 a 2
+2025-04-15 15:13:31.901,54,29852,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:13:34.484,56,88153,PIEDRAS_COLOCADAS,Cambio de 2 a 3
+2025-04-15 15:13:34.510,56,90943,PIEDRAS_COLOCADAS,Cambio de 3 a 2
+2025-04-15 15:13:34.539,56,93681,PIEDRAS_COLOCADAS,Cambio de 2 a 3
+2025-04-15 15:13:34.567,56,96478,PIEDRAS_COLOCADAS,Cambio de 3 a 2
+2025-04-15 15:13:34.595,56,9927,PIEDRAS_COLOCADAS,Cambio de 2 a 3
+2025-04-15 15:13:34.928,57,32606,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:13:35.043,57,44147,PIEDRAS_COLOCADAS,Cambio de 3 a 2
+2025-04-15 15:13:35.068,57,46514,PIEDRAS_COLOCADAS,Cambio de 2 a 3
+2025-04-15 15:13:35.085,57,48308,PIEDRAS_COLOCADAS,Cambio de 3 a 2
+2025-04-15 15:13:35.107,57,50645,PIEDRAS_COLOCADAS,Cambio de 2 a 3
+2025-04-15 15:13:35.126,57,52455,PIEDRAS_COLOCADAS,Cambio de 3 a 2
+2025-04-15 15:13:35.150,57,54823,PIEDRAS_COLOCADAS,Cambio de 2 a 3
+2025-04-15 15:13:35.167,57,56603,PIEDRAS_COLOCADAS,Cambio de 3 a 2
+2025-04-15 15:13:35.192,57,59005,PIEDRAS_COLOCADAS,Cambio de 2 a 3
+2025-04-15 15:13:35.209,57,60781,PIEDRAS_COLOCADAS,Cambio de 3 a 2
+2025-04-15 15:13:35.234,57,63154,PIEDRAS_COLOCADAS,Cambio de 2 a 3
+2025-04-15 15:13:35.252,57,64937,PIEDRAS_COLOCADAS,Cambio de 3 a 2
+2025-04-15 15:13:35.275,57,67365,PIEDRAS_COLOCADAS,Cambio de 2 a 3
+2025-04-15 15:13:35.292,57,69099,PIEDRAS_COLOCADAS,Cambio de 3 a 2
+2025-04-15 15:13:35.317,57,71497,PIEDRAS_COLOCADAS,Cambio de 2 a 3
+2025-04-15 15:13:35.333,57,73253,PIEDRAS_COLOCADAS,Cambio de 3 a 2
+2025-04-15 15:13:35.359,57,75646,PIEDRAS_COLOCADAS,Cambio de 2 a 3
+2025-04-15 15:13:35.375,57,77405,PIEDRAS_COLOCADAS,Cambio de 3 a 2
+2025-04-15 15:13:35.400,57,79817,PIEDRAS_COLOCADAS,Cambio de 2 a 3
+2025-04-15 15:13:35.418,57,81586,PIEDRAS_COLOCADAS,Cambio de 3 a 2
+2025-04-15 15:13:35.441,57,83985,PIEDRAS_COLOCADAS,Cambio de 2 a 3
+2025-04-15 15:13:35.459,57,85764,PIEDRAS_COLOCADAS,Cambio de 3 a 2
+2025-04-15 15:13:35.484,57,88138,PIEDRAS_COLOCADAS,Cambio de 2 a 3
+2025-04-15 15:13:35.501,57,89926,PIEDRAS_COLOCADAS,Cambio de 3 a 2
+2025-04-15 15:13:35.525,57,9232,PIEDRAS_COLOCADAS,Cambio de 2 a 3
+2025-04-15 15:13:35.543,57,94113,PIEDRAS_COLOCADAS,Cambio de 3 a 2
+2025-04-15 15:13:35.567,57,96487,PIEDRAS_COLOCADAS,Cambio de 2 a 3
+2025-04-15 15:13:35.585,57,98251,PIEDRAS_COLOCADAS,Cambio de 3 a 2
+2025-04-15 15:13:35.608,58,00642,PIEDRAS_COLOCADAS,Cambio de 2 a 3
+2025-04-15 15:13:35.626,58,02432,PIEDRAS_COLOCADAS,Cambio de 3 a 2
+2025-04-15 15:13:35.651,58,04816,PIEDRAS_COLOCADAS,Cambio de 2 a 3
+2025-04-15 15:13:35.668,58,06629,PIEDRAS_COLOCADAS,Cambio de 3 a 2
+2025-04-15 15:13:35.692,58,09008,PIEDRAS_COLOCADAS,Cambio de 2 a 3
+2025-04-15 15:13:35.709,58,1078,PIEDRAS_COLOCADAS,Cambio de 3 a 2
+2025-04-15 15:13:35.734,58,13156,PIEDRAS_COLOCADAS,Cambio de 2 a 3
+2025-04-15 15:13:35.752,58,14957,PIEDRAS_COLOCADAS,Cambio de 3 a 2
+2025-04-15 15:13:35.776,58,17346,PIEDRAS_COLOCADAS,Cambio de 2 a 3
+2025-04-15 15:13:35.793,58,19147,PIEDRAS_COLOCADAS,Cambio de 3 a 2
+2025-04-15 15:13:35.816,58,21461,PIEDRAS_COLOCADAS,Cambio de 2 a 3
+2025-04-15 15:13:35.835,58,23273,PIEDRAS_COLOCADAS,Cambio de 3 a 2
+2025-04-15 15:13:35.859,58,25652,PIEDRAS_COLOCADAS,Cambio de 2 a 3
+2025-04-15 15:13:35.875,58,27423,PIEDRAS_COLOCADAS,Cambio de 3 a 2
+2025-04-15 15:13:35.901,58,29816,PIEDRAS_COLOCADAS,Cambio de 2 a 3
+2025-04-15 15:13:37.957,60,35357,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:13:38.483,60,88138,FOGATA_ENCENDIDA,Veces: 1
+2025-04-15 15:13:38.578,60,88138,PIEDRAS_COLOCADAS,Cambio de 3 a 4
+2025-04-15 15:13:38.578,60,88138,TODAS_PIEDRAS,Tiempo desde primera piedra: 20,33208
+2025-04-15 15:13:38.595,60,99261,FOGATA_APAGADA,Veces: 1
+2025-04-15 15:13:38.597,60,99261,PIEDRAS_COLOCADAS,Cambio de 4 a 3
+2025-04-15 15:13:38.622,61,02036,FOGATA_ENCENDIDA,Veces: 2
+2025-04-15 15:13:38.625,61,02036,PIEDRAS_COLOCADAS,Cambio de 3 a 4
+2025-04-15 15:13:38.650,61,04819,FOGATA_APAGADA,Veces: 2
+2025-04-15 15:13:38.652,61,04819,PIEDRAS_COLOCADAS,Cambio de 4 a 3
+2025-04-15 15:13:38.679,61,0759,FOGATA_ENCENDIDA,Veces: 3
+2025-04-15 15:13:38.681,61,0759,PIEDRAS_COLOCADAS,Cambio de 3 a 4
+2025-04-15 15:13:38.706,61,10394,FOGATA_APAGADA,Veces: 3
+2025-04-15 15:13:38.708,61,10394,PIEDRAS_COLOCADAS,Cambio de 4 a 3
+2025-04-15 15:13:38.733,61,13156,FOGATA_ENCENDIDA,Veces: 4
+2025-04-15 15:13:38.735,61,13156,PIEDRAS_COLOCADAS,Cambio de 3 a 4
+2025-04-15 15:13:40.982,63,38095,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:13:44.012,66,40867,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:13:47.026,69,42252,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:13:50.053,72,44982,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:13:52.260,74,65767,INICIO_COLLIDER_ARBOL,Tiempo desde inicio: 74,66 segundos
+2025-04-15 15:13:53.068,75,46694,CONTINUE_COLLIDER_ARBOL,Tiempo acumulado: 4,96 segundos
+2025-04-15 15:13:53.151,75,55026,FIN_COLLIDER_ARBOL,Duración: 0,89 segundos, Acumulado: 5,85 segundos
+2025-04-15 15:13:56.080,78,4773,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:13:56.693,79,09213,INICIO_COLLIDER_ARBOL,Tiempo desde inicio: 79,09 segundos
+2025-04-15 15:13:59.094,81,49104,CONTINUE_COLLIDER_ARBOL,Tiempo acumulado: 5,85 segundos
+2025-04-15 15:14:02.110,84,50802,CONTINUE_COLLIDER_ARBOL,Tiempo acumulado: 5,85 segundos
+2025-04-15 15:14:04.231,86,62931,FIN_COLLIDER_ARBOL,Duración: 7,54 segundos, Acumulado: 13,39 segundos
+2025-04-15 15:14:04.690,87,08791,INICIO_COLLIDER_CAJA,Tiempo desde inicio: 87,09 segundos
+2025-04-15 15:14:05.092,87,4901,FIN_COLLIDER_CAJA,Duración: 0,40 segundos, Acumulado: 1,59 segundos
+2025-04-15 15:14:05.121,87,51826,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:14:08.147,90,54562,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:14:09.370,91,76735,INICIO_COLLIDER_CAJA,Tiempo desde inicio: 91,77 segundos
+2025-04-15 15:14:09.565,91,96238,FIN_COLLIDER_CAJA,Duración: 0,20 segundos, Acumulado: 1,78 segundos
+2025-04-15 15:14:09.870,92,26761,INICIO_COLLIDER_ARBOL,Tiempo desde inicio: 92,27 segundos
+2025-04-15 15:14:11.162,93,5594,CONTINUE_COLLIDER_ARBOL,Tiempo acumulado: 13,39 segundos
+2025-04-15 15:14:11.537,93,9344,FIN_COLLIDER_ARBOL,Duración: 1,67 segundos, Acumulado: 15,06 segundos
+2025-04-15 15:14:13.453,95,85043,INICIO_COLLIDER_ARBOL,Tiempo desde inicio: 95,85 segundos
+2025-04-15 15:14:14.178,96,5767,CONTINUE_COLLIDER_ARBOL,Tiempo acumulado: 15,06 segundos
+2025-04-15 15:14:14.429,96,82709,PRIMERA_HOJA,Tiempo: 96,82709
+2025-04-15 15:14:14.429,96,82709,HOJA_AGARRADA,Número: 1, InstanceID: 66572, Tiempo: 96,82709
+2025-04-15 15:14:14.870,97,26755,FIN_COLLIDER_ARBOL,Duración: 1,42 segundos, Acumulado: 16,48 segundos
+2025-04-15 15:14:17.190,99,58669,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:14:18.939,101,3363,HOJA_SOLTADA,InstanceID: 66572, Tiempo: 101,3363
+2025-04-15 15:14:20.175,102,5726,INICIO_COLLIDER_RESPIRACION,Tiempo desde inicio: 102,57 segundos
+2025-04-15 15:14:20.203,102,6003,CONTINUE_COLLIDER_RESPIRACION,Tiempo acumulado: 0,08 segundos
+2025-04-15 15:14:20.646,103,0448,FIN_COLLIDER_RESPIRACION,Duración: 0,47 segundos, Acumulado: 0,56 segundos
+2025-04-15 15:14:20.926,103,323,INICIO_COLLIDER_ARBOL,Tiempo desde inicio: 103,32 segundos
+2025-04-15 15:14:23.216,105,6141,CONTINUE_COLLIDER_ARBOL,Tiempo acumulado: 16,48 segundos
+2025-04-15 15:14:24.512,106,8813,AUDIO_HOJAS,Activación #1, Tiempo: 106,8813
+2025-04-15 15:14:25.355,107,7524,FIN_COLLIDER_ARBOL,Duración: 4,43 segundos, Acumulado: 20,90 segundos
+2025-04-15 15:14:26.230,108,6272,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:14:29.243,111,6415,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:14:32.262,114,6592,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:14:35.271,117,6687,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:14:38.288,120,6863,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:14:41.298,123,6957,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:14:41.381,123,7794,INICIO_COLLIDER_RESPIRACION,Tiempo desde inicio: 123,78 segundos
+2025-04-15 15:14:44.143,126,5419,FIN_COLLIDER_RESPIRACION,Duración: 2,76 segundos, Acumulado: 3,32 segundos
+2025-04-15 15:14:44.311,126,7083,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:14:44.478,126,8752,INICIO_COLLIDER_RESPIRACION,Tiempo desde inicio: 126,88 segundos
+2025-04-15 15:14:45.200,127,5972,FIN_COLLIDER_RESPIRACION,Duración: 0,72 segundos, Acumulado: 4,04 segundos
+2025-04-15 15:14:46.380,128,7645,AUDIO_RESPIRACION,Activación #1, Tiempo: 128,7645
+2025-04-15 15:14:47.310,129,7089,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:14:48.770,131,1676,INICIO_COLLIDER_RESPIRACION,Tiempo desde inicio: 131,17 segundos
+2025-04-15 15:14:50.326,132,7232,CONTINUE_COLLIDER_RESPIRACION,Tiempo acumulado: 4,04 segundos
+2025-04-15 15:14:50.437,132,8344,FIN_COLLIDER_RESPIRACION,Duración: 1,67 segundos, Acumulado: 5,71 segundos
+2025-04-15 15:14:53.327,135,7234,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:14:55.631,138,0285,INICIO_COLLIDER_RESPIRACION,Tiempo desde inicio: 138,03 segundos
+2025-04-15 15:14:55.992,138,3895,FIN_COLLIDER_RESPIRACION,Duración: 0,36 segundos, Acumulado: 6,07 segundos
+2025-04-15 15:14:56.355,138,7507,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:14:56.380,138,7783,INICIO_COLLIDER_RESPIRACION,Tiempo desde inicio: 138,78 segundos
+2025-04-15 15:14:56.463,138,8612,FIN_COLLIDER_RESPIRACION,Duración: 0,08 segundos, Acumulado: 6,15 segundos
+2025-04-15 15:14:56.798,139,195,INICIO_COLLIDER_RESPIRACION,Tiempo desde inicio: 139,20 segundos
+2025-04-15 15:14:59.380,141,7783,CONTINUE_COLLIDER_RESPIRACION,Tiempo acumulado: 6,15 segundos
+2025-04-15 15:15:02.404,144,792,CONTINUE_COLLIDER_RESPIRACION,Tiempo acumulado: 6,15 segundos
+2025-04-15 15:15:03.270,145,6678,FIN_COLLIDER_RESPIRACION,Duración: 6,47 segundos, Acumulado: 12,62 segundos
+2025-04-15 15:15:03.936,146,3333,INICIO_COLLIDER_RESPIRACION,Tiempo desde inicio: 146,33 segundos
+2025-04-15 15:15:05.409,147,8056,CONTINUE_COLLIDER_RESPIRACION,Tiempo acumulado: 12,62 segundos
+2025-04-15 15:15:08.422,150,8192,CONTINUE_COLLIDER_RESPIRACION,Tiempo acumulado: 12,62 segundos
+2025-04-15 15:15:11.438,153,8371,CONTINUE_COLLIDER_RESPIRACION,Tiempo acumulado: 12,62 segundos
+2025-04-15 15:15:14.448,156,8465,CONTINUE_COLLIDER_RESPIRACION,Tiempo acumulado: 12,62 segundos
+2025-04-15 15:15:17.477,159,874,CONTINUE_COLLIDER_RESPIRACION,Tiempo acumulado: 12,62 segundos
+2025-04-15 15:15:20.504,162,9012,CONTINUE_COLLIDER_RESPIRACION,Tiempo acumulado: 12,62 segundos
+2025-04-15 15:15:23.531,165,929,CONTINUE_COLLIDER_RESPIRACION,Tiempo acumulado: 12,62 segundos
+2025-04-15 15:15:26.559,168,9561,CONTINUE_COLLIDER_RESPIRACION,Tiempo acumulado: 12,62 segundos
+2025-04-15 15:15:29.573,171,9703,CONTINUE_COLLIDER_RESPIRACION,Tiempo acumulado: 12,62 segundos
+2025-04-15 15:15:32.587,174,9836,CONTINUE_COLLIDER_RESPIRACION,Tiempo acumulado: 12,62 segundos
+2025-04-15 15:15:35.614,178,0114,CONTINUE_COLLIDER_RESPIRACION,Tiempo acumulado: 12,62 segundos
+2025-04-15 15:15:38.642,181,039,CONTINUE_COLLIDER_RESPIRACION,Tiempo acumulado: 12,62 segundos
+2025-04-15 15:15:41.668,184,0659,CONTINUE_COLLIDER_RESPIRACION,Tiempo acumulado: 12,62 segundos
+2025-04-15 15:15:44.669,187,0662,CONTINUE_COLLIDER_RESPIRACION,Tiempo acumulado: 12,62 segundos
+2025-04-15 15:15:46.390,188,7879,FIN_COLLIDER_RESPIRACION,Duración: 42,45 segundos, Acumulado: 55,08 segundos
+2025-04-15 15:15:47.030,189,4268,INICIO_COLLIDER_RESPIRACION,Tiempo desde inicio: 189,43 segundos
+2025-04-15 15:15:47.696,190,0926,CONTINUE_COLLIDER_RESPIRACION,Tiempo acumulado: 55,08 segundos
+2025-04-15 15:15:49.918,192,3146,FIN_COLLIDER_RESPIRACION,Duración: 2,89 segundos, Acumulado: 57,97 segundos
+2025-04-15 15:15:50.696,193,0928,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:15:53.724,196,1208,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:15:56.610,199,009,INICIO_COLLIDER_RESPIRACION,Tiempo desde inicio: 199,01 segundos
+2025-04-15 15:15:56.751,199,1486,CONTINUE_COLLIDER_RESPIRACION,Tiempo acumulado: 57,97 segundos
+2025-04-15 15:15:58.751,201,1481,FIN_COLLIDER_RESPIRACION,Duración: 2,14 segundos, Acumulado: 60,11 segundos
+2025-04-15 15:15:59.764,202,1617,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:16:00.597,202,9953,INICIO_COLLIDER_RESPIRACION,Tiempo desde inicio: 203,00 segundos
+2025-04-15 15:16:01.417,203,8148,FIN_COLLIDER_RESPIRACION,Duración: 0,82 segundos, Acumulado: 60,92 segundos
+2025-04-15 15:16:01.695,204,0927,INICIO_COLLIDER_ARBOL,Tiempo desde inicio: 204,09 segundos
+2025-04-15 15:16:02.777,205,1757,CONTINUE_COLLIDER_ARBOL,Tiempo acumulado: 20,90 segundos
+2025-04-15 15:16:03.737,206,1344,FIN_COLLIDER_ARBOL,Duración: 2,04 segundos, Acumulado: 22,95 segundos
+2025-04-15 15:16:04.209,206,6066,INICIO_COLLIDER_CAJA,Tiempo desde inicio: 206,61 segundos
+2025-04-15 15:16:04.375,206,7729,FIN_COLLIDER_CAJA,Duración: 0,17 segundos, Acumulado: 1,95 segundos
+2025-04-15 15:16:04.903,207,3008,INICIO_COLLIDER_CAJA,Tiempo desde inicio: 207,30 segundos
+2025-04-15 15:16:05.793,208,1897,CONTINUE_COLLIDER_CAJA,Tiempo acumulado: 1,95 segundos
+2025-04-15 15:16:05.959,208,3565,FIN_COLLIDER_CAJA,Duración: 1,06 segundos, Acumulado: 3,00 segundos
+2025-04-15 15:16:08.820,211,2168,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:16:09.763,212,1604,INICIO_COLLIDER_CAJA,Tiempo desde inicio: 212,16 segundos
+2025-04-15 15:16:10.845,213,2442,FIN_COLLIDER_CAJA,Duración: 1,08 segundos, Acumulado: 4,09 segundos
+2025-04-15 15:16:11.846,214,2443,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:16:12.013,214,4113,CAJA_ABIERTA,Tiempo: 214,4113
+2025-04-15 15:16:14.846,217,2445,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:16:15.292,217,6888,INICIO_COLLIDER_CAJA,Tiempo desde inicio: 217,69 segundos
+2025-04-15 15:16:16.069,218,4666,FIN_COLLIDER_CAJA,Duración: 0,78 segundos, Acumulado: 4,87 segundos
+2025-04-15 15:16:17.568,219,9664,INICIO_COLLIDER_CAJA,Tiempo desde inicio: 219,97 segundos
+2025-04-15 15:16:17.861,220,2581,CONTINUE_COLLIDER_CAJA,Tiempo acumulado: 4,87 segundos
+2025-04-15 15:16:17.943,220,3414,FIN_COLLIDER_CAJA,Duración: 0,38 segundos, Acumulado: 5,24 segundos
+2025-04-15 15:16:20.888,223,2852,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:16:23.915,226,3126,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:16:26.915,229,3127,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:16:29.943,232,3402,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:16:32.971,235,3676,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:16:35.971,238,3676,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:16:37.442,239,8393,INICIO_COLLIDER_CAJA,Tiempo desde inicio: 239,84 segundos
+2025-04-15 15:16:37.913,240,312,FIN_COLLIDER_CAJA,Duración: 0,47 segundos, Acumulado: 5,71 segundos
+2025-04-15 15:16:38.999,241,3951,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:16:39.803,242,2002,INICIO_COLLIDER_CAJA,Tiempo desde inicio: 242,20 segundos
+2025-04-15 15:16:40.138,242,5351,FIN_COLLIDER_CAJA,Duración: 0,33 segundos, Acumulado: 6,05 segundos
+2025-04-15 15:16:40.460,242,8573,INICIO_COLLIDER_ARBOL,Tiempo desde inicio: 242,86 segundos
+2025-04-15 15:16:40.650,243,0474,FIN_COLLIDER_ARBOL,Duración: 0,19 segundos, Acumulado: 23,14 segundos
+2025-04-15 15:16:40.677,243,0757,INICIO_COLLIDER_RESPIRACION,Tiempo desde inicio: 243,08 segundos
+2025-04-15 15:16:41.929,244,3263,FIN_COLLIDER_RESPIRACION,Duración: 1,25 segundos, Acumulado: 62,18 segundos
+2025-04-15 15:16:42.011,244,4093,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:16:43.234,245,6312,INICIO_COLLIDER_RESPIRACION,Tiempo desde inicio: 245,63 segundos
+2025-04-15 15:16:44.343,246,7422,FIN_COLLIDER_RESPIRACION,Duración: 1,11 segundos, Acumulado: 63,29 segundos
+2025-04-15 15:16:45.040,247,4366,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:16:45.990,248,3256,PRIMER_FIN,Tiempo: 248,3256
+2025-04-15 15:16:46.692,249,0892,INICIO_COLLIDER_RESPIRACION,Tiempo desde inicio: 249,09 segundos
+2025-04-15 15:16:47.275,249,6723,FIN_COLLIDER_RESPIRACION,Duración: 0,58 segundos, Acumulado: 63,87 segundos
+2025-04-15 15:16:47.497,249,8947,INICIO_COLLIDER_ARBOL,Tiempo desde inicio: 249,89 segundos
+2025-04-15 15:16:48.053,250,4501,CONTINUE_COLLIDER_ARBOL,Tiempo acumulado: 23,14 segundos
+2025-04-15 15:16:48.552,250,9499,FIN_COLLIDER_ARBOL,Duración: 1,06 segundos, Acumulado: 24,19 segundos
+2025-04-15 15:16:49.164,251,5614,INICIO_COLLIDER_ARBOL,Tiempo desde inicio: 251,56 segundos
+2025-04-15 15:16:49.831,252,2278,FIN_COLLIDER_ARBOL,Duración: 0,67 segundos, Acumulado: 24,86 segundos
+2025-04-15 15:16:50.245,252,6444,INICIO_COLLIDER_ARBOL,Tiempo desde inicio: 252,64 segundos
+2025-04-15 15:16:50.666,253,065,FIN_COLLIDER_ARBOL,Duración: 0,42 segundos, Acumulado: 25,28 segundos
+2025-04-15 15:16:51.058,253,4556,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:16:54.066,256,4646,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:16:57.069,259,4684,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:17:00.078,262,4755,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:17:03.083,265,4797,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:17:04.872,267,2722,INICIO_COLLIDER_CAJA,Tiempo desde inicio: 267,27 segundos
+2025-04-15 15:17:05.263,267,6597,FIN_COLLIDER_CAJA,Duración: 0,39 segundos, Acumulado: 6,44 segundos
+2025-04-15 15:17:06.106,268,504,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:17:09.120,271,5178,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:17:12.134,274,5314,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:17:14.777,277,1759,INICIO_COLLIDER_ARBOL,Tiempo desde inicio: 277,18 segundos
+2025-04-15 15:17:15.092,277,4897,FIN_COLLIDER_ARBOL,Duración: 0,31 segundos, Acumulado: 25,59 segundos
+2025-04-15 15:17:15.152,277,549,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:17:15.608,278,0076,INICIO_COLLIDER_RESPIRACION,Tiempo desde inicio: 278,01 segundos
+2025-04-15 15:17:18.176,280,5728,CONTINUE_COLLIDER_RESPIRACION,Tiempo acumulado: 63,87 segundos
+2025-04-15 15:17:18.786,281,1839,FIN_COLLIDER_RESPIRACION,Duración: 3,18 segundos, Acumulado: 67,05 segundos
+2025-04-15 15:17:19.564,281,9616,INICIO_COLLIDER_RESPIRACION,Tiempo desde inicio: 281,96 segundos
+2025-04-15 15:17:19.897,282,295,FIN_COLLIDER_RESPIRACION,Duración: 0,33 segundos, Acumulado: 67,38 segundos
+2025-04-15 15:17:21.203,283,5995,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:17:24.203,286,5998,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider
+2025-04-15 15:17:25.897,288,2944,INICIO_COLLIDER_RESPIRACION,Tiempo desde inicio: 288,29 segundos
+2025-04-15 15:17:26.008,288,4055,FIN_COLLIDER_RESPIRACION,Duración: 0,11 segundos, Acumulado: 67,49 segundos
+2025-04-15 15:17:27.147,289,5443,SEGUNDO_FIN,Tiempo: 289,5443, Tiempo desde primer fin: 41,21869
+2025-04-15 15:17:27.149,289,5443,RESUMEN,RESUMEN DE LA EXPERIENCIA
+Tiempo total de experiencia: 289,5443 segundos
+
+ATENCIÓN DEL USUARIO:
+Tiempo mirando al árbol: 25,59 segundos
+Tiempo mirando a la caja: 6,44 segundos
+Tiempo mirando a la fogata: 0,83 segundos
+Tiempo mirando a la respiración: 67,49 segundos
+Tiempo sin mirar a ningún elemento: 0,00 segundos
+
+Porcentajes de atención:
+Árbol: 8,84%
+Caja: 2,22%
+Fogata: 0,29%
+Respiración: 23,31%
+Sin foco específico: 0,00%
+
+CAJA:
+Caja abierta: True
+Tiempo hasta abrir la caja: 214,4113 segundos
+
+FOGATA:
+Piedras colocadas: 4/4
+Tiempo hasta primera piedra: 40,5493 segundos
+Tiempo para completar todas las piedras desde la primera: 20,33208 segundos
+Veces encendida la fogata: 4
+Veces apagada la fogata: 3
+
+HOJAS:
+Hojas manipuladas: 1
+Tiempo hasta primera hoja: 96,82709 segundos
+Tiempo promedio de interacción con hoja: 4,509209 segundos
+
+CIERRE DE EXPERIENCIA:
+Tiempo hasta primer botón de fin: 248,3256 segundos
+Tiempo hasta segundo botón de fin: 289,5443 segundos
+Tiempo entre primer y segundo fin: 41,21869 segundos
+
+BOTONES DE AUDIO:
+Primer audio activado: Fogata a los 30,56438 segundos
+
+Audio Hojas:
+  Veces activado: 1
+  Tiempos de activación (segundos): 106,8813
+
+Audio Fogata:
+  Veces activado: 1
+  Tiempos de activación (segundos): 30,56438
+
+Audio Respiración:
+  Veces activado: 1
+  Tiempos de activación (segundos): 128,7645
+
+Audio Árbol:
+  Veces activado: 0
+
+Secuencia de audio según primer uso:
+  1. Audio Fogata a los 30,56438 segundos
+  2. Audio Hojas a los 106,8813 segundos
+  3. Audio Respiración a los 128,7645 segundos
+
+2025-04-15 15:17:27.203,289,5998,NO_COLLIDER_VIEW,El usuario no está mirando a ningún collider

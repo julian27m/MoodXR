@@ -1,0 +1,60 @@
+RESUMEN DE LA EXPERIENCIA
+Tiempo total de experiencia: 289,5443 segundos
+
+ATENCIÓN DEL USUARIO:
+Tiempo mirando al árbol: 25,59 segundos
+Tiempo mirando a la caja: 6,44 segundos
+Tiempo mirando a la fogata: 0,83 segundos
+Tiempo mirando a la respiración: 67,49 segundos
+Tiempo sin mirar a ningún elemento: 0,00 segundos
+
+Porcentajes de atención:
+Árbol: 8,84%
+Caja: 2,22%
+Fogata: 0,29%
+Respiración: 23,31%
+Sin foco específico: 0,00%
+
+CAJA:
+Caja abierta: True
+Tiempo hasta abrir la caja: 214,4113 segundos
+
+FOGATA:
+Piedras colocadas: 4/4
+Tiempo hasta primera piedra: 40,5493 segundos
+Tiempo para completar todas las piedras desde la primera: 20,33208 segundos
+Veces encendida la fogata: 4
+Veces apagada la fogata: 3
+
+HOJAS:
+Hojas manipuladas: 1
+Tiempo hasta primera hoja: 96,82709 segundos
+Tiempo promedio de interacción con hoja: 4,509209 segundos
+
+CIERRE DE EXPERIENCIA:
+Tiempo hasta primer botón de fin: 248,3256 segundos
+Tiempo hasta segundo botón de fin: 289,5443 segundos
+Tiempo entre primer y segundo fin: 41,21869 segundos
+
+BOTONES DE AUDIO:
+Primer audio activado: Fogata a los 30,56438 segundos
+
+Audio Hojas:
+  Veces activado: 1
+  Tiempos de activación (segundos): 106,8813
+
+Audio Fogata:
+  Veces activado: 1
+  Tiempos de activación (segundos): 30,56438
+
+Audio Respiración:
+  Veces activado: 1
+  Tiempos de activación (segundos): 128,7645
+
+Audio Árbol:
+  Veces activado: 0
+
+Secuencia de audio según primer uso:
+  1. Audio Fogata a los 30,56438 segundos
+  2. Audio Hojas a los 106,8813 segundos
+  3. Audio Respiración a los 128,7645 segundos
