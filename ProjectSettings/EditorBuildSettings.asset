@@ -29,7 +29,7 @@ EditorBuildSettings:
   - enabled: 0
     path: "Assets/Samples/Meta XR Interaction \u200BSDK/72.0.0/Example Scenes/SnapExamples.unity"
     guid: 01ca63189b69e00488487d660224a315
-  - enabled: 1
+  - enabled: 0
     path: "Assets/Samples/Meta XR Interaction \u200BSDK/72.0.0/Example Scenes/DistanceGrabExamples.unity"
     guid: e1c1f1d4144ac8849ac1833b99bdfd23
   - enabled: 1
