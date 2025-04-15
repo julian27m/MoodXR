@@ -10,6 +10,33 @@ public class TelemetriaManager : MonoBehaviour
     private static TelemetriaManager _instance;
     public static TelemetriaManager Instance { get { return _instance; } }
 
+    // Configuración de seguimiento de mirada
+    [Header("Configuración de Seguimiento de Mirada")]
+    [Tooltip("La posición entre las cámaras izquierda y derecha (cabeza del usuario)")]
+    public Transform playerHead;
+
+    [Tooltip("Umbral de alineación para considerar que el usuario está mirando al objeto")]
+    [Range(0.7f, 1.0f)]
+    public float alignmentThreshold = 0.9f;
+
+    [Tooltip("Tiempo en segundos que el usuario debe mirar antes de considerar foco de atención")]
+    public float focusDelay = 0.5f;
+
+    [Tooltip("Intervalo en segundos para registrar la mirada del usuario")]
+    public float gazeLogInterval = 3.0f;
+
+    [Tooltip("Collider del árbol")]
+    public Transform arbolCollider;
+
+    [Tooltip("Collider de la caja")]
+    public Transform cajaCollider;
+
+    [Tooltip("Collider de la fogata")]
+    public Transform fogataCollider;
+
+    [Tooltip("Collider de la respiración")]
+    public Transform respiracionCollider;
+
     private string logFilePath;
     private StringBuilder logBuffer = new StringBuilder();
     private float startTime;
@@ -17,6 +44,20 @@ public class TelemetriaManager : MonoBehaviour
     private bool isLogReady = false; // Para evitar logs prematuros
     private float lastSaveTime = 0f;
     private float saveInterval = 5f; // Guardar cada 5 segundos
+
+    // Variables para seguimiento de mirada
+    private string currentColliderName = "Ninguno";
+    private float lastGazeLogTime = 0f;
+    private float currentColliderStartTime = 0f;
+
+    // Diccionario para almacenar tiempos totales de mirada
+    private Dictionary<string, float> colliderTotalLookTimes = new Dictionary<string, float>() {
+        {"Arbol", 0f},
+        {"Caja", 0f},
+        {"Fogata", 0f},
+        {"Respiracion", 0f},
+        {"Ninguno", 0f}
+    };
 
     // Datos de la caja
     private bool cajaAbierta = false;
@@ -78,14 +119,21 @@ public class TelemetriaManager : MonoBehaviour
 
         // Debug info
         Debug.Log("TelemetriaManager inicializado");
+
+        // Verificar que tengamos los colliders necesarios
+        ValidarColliders();
     }
 
     void Start()
     {
         startTime = Time.time;
+        lastGazeLogTime = Time.time; // Inicializar el tiempo del último registro de mirada
         Log("INICIO_APLICACION", "");
         isLogReady = true; // Marcar que estamos listos para registrar eventos
         Debug.Log("TelemetriaManager: isLogReady = true");
+
+        // Iniciar la corrutina para verificar la mirada periódicamente
+        StartCoroutine(VerificarMiradaPeriodicamente());
     }
 
     void Update()
@@ -97,6 +145,118 @@ public class TelemetriaManager : MonoBehaviour
             SaveLogBuffer();
             Debug.Log("Guardado periódico de telemetría");
         }
+
+        // Verificar continuamente hacia dónde está mirando el usuario
+        VerificarMirada();
+    }
+
+    private void ValidarColliders()
+    {
+        if (playerHead == null)
+        {
+            Debug.LogError("TelemetriaManager: No se ha asignado la cabeza del jugador (playerHead)");
+        }
+
+        if (arbolCollider == null)
+        {
+            Debug.LogWarning("TelemetriaManager: No se ha asignado el collider del árbol");
+        }
+
+        if (cajaCollider == null)
+        {
+            Debug.LogWarning("TelemetriaManager: No se ha asignado el collider de la caja");
+        }
+
+        if (fogataCollider == null)
+        {
+            Debug.LogWarning("TelemetriaManager: No se ha asignado el collider de la fogata");
+        }
+
+        if (respiracionCollider == null)
+        {
+            Debug.LogWarning("TelemetriaManager: No se ha asignado el collider de la respiración");
+        }
+    }
+
+    private IEnumerator VerificarMiradaPeriodicamente()
+    {
+        while (true)
+        {
+            // Esperar el intervalo configurado
+            yield return new WaitForSeconds(gazeLogInterval);
+
+            // Registrar el collider actual en el log si ya ha pasado suficiente tiempo
+            if (Time.time - lastGazeLogTime >= gazeLogInterval)
+            {
+                lastGazeLogTime = Time.time;
+
+                // Registrar el collider que está mirando actualmente
+                if (currentColliderName != "Ninguno")
+                {
+                    Log($"CONTINUE_COLLIDER_{currentColliderName.ToUpper()}", $"Tiempo acumulado: {colliderTotalLookTimes[currentColliderName]:F2} segundos");
+                }
+                else
+                {
+                    Log("NO_COLLIDER_VIEW", "El usuario no está mirando a ningún collider");
+                }
+            }
+        }
+    }
+
+    private void VerificarMirada()
+    {
+        if (playerHead == null || !isLogReady) return;
+
+        // Comprueba hacia qué collider está mirando el usuario
+        string colliderActual = ObtenerColliderEnFoco();
+
+        // Si cambió el collider, registramos el tiempo y el cambio
+        if (colliderActual != currentColliderName)
+        {
+            // Registrar el tiempo que estuvo mirando al collider anterior
+            if (currentColliderName != "Ninguno")
+            {
+                float tiempoMiradaAnterior = Time.time - currentColliderStartTime;
+                colliderTotalLookTimes[currentColliderName] += tiempoMiradaAnterior;
+                Log($"FIN_COLLIDER_{currentColliderName.ToUpper()}", $"Duración: {tiempoMiradaAnterior:F2} segundos, Acumulado: {colliderTotalLookTimes[currentColliderName]:F2} segundos");
+            }
+
+            // Actualizar al nuevo collider
+            currentColliderName = colliderActual;
+            currentColliderStartTime = Time.time;
+
+            // Registrar el nuevo collider
+            if (currentColliderName != "Ninguno")
+            {
+                Log($"INICIO_COLLIDER_{currentColliderName.ToUpper()}", $"Tiempo desde inicio: {Time.time - startTime:F2} segundos");
+            }
+        }
+    }
+
+    private string ObtenerColliderEnFoco()
+    {
+        // Verifica si está mirando alguno de los colliders
+        if (EstaLookingAt(arbolCollider)) return "Arbol";
+        if (EstaLookingAt(cajaCollider)) return "Caja";
+        if (EstaLookingAt(fogataCollider)) return "Fogata";
+        if (EstaLookingAt(respiracionCollider)) return "Respiracion";
+
+        // Si no está mirando ninguno, devuelve "Ninguno"
+        return "Ninguno";
+    }
+
+    private bool EstaLookingAt(Transform targetTransform)
+    {
+        if (playerHead == null || targetTransform == null) return false;
+
+        // Calcula el vector desde la cabeza del usuario hasta el objeto
+        Vector3 viewVector = Vector3.Normalize(targetTransform.position - playerHead.position);
+
+        // Calcula el producto escalar (dot product) para determinar la alineación
+        float dotView = Vector3.Dot(playerHead.forward, viewVector);
+
+        // Retorna true si el dot product es mayor que el umbral
+        return dotView >= alignmentThreshold;
     }
 
     private void CreateLogFile()
@@ -194,6 +354,14 @@ public class TelemetriaManager : MonoBehaviour
 
     private void OnApplicationQuit()
     {
+        // Registrar el tiempo final del último collider que se estaba mirando
+        if (currentColliderName != "Ninguno")
+        {
+            float tiempoMiradaFinal = Time.time - currentColliderStartTime;
+            colliderTotalLookTimes[currentColliderName] += tiempoMiradaFinal;
+            Log($"FIN_COLLIDER_{currentColliderName.ToUpper()}", $"Duración final: {tiempoMiradaFinal:F2} segundos, Total acumulado: {colliderTotalLookTimes[currentColliderName]:F2} segundos");
+        }
+
         // Si el primer fin no fue activado, registrarlo aquí como dato automático
         if (!primerFinActivado)
         {
@@ -236,6 +404,26 @@ public class TelemetriaManager : MonoBehaviour
             StringBuilder resumen = new StringBuilder();
             resumen.AppendLine("RESUMEN DE LA EXPERIENCIA");
             resumen.AppendLine($"Tiempo total de experiencia: {Time.time - startTime} segundos");
+
+            // Resumen de atención del usuario
+            resumen.AppendLine("\nATENCIÓN DEL USUARIO:");
+            resumen.AppendLine($"Tiempo mirando al árbol: {colliderTotalLookTimes["Arbol"]:F2} segundos");
+            resumen.AppendLine($"Tiempo mirando a la caja: {colliderTotalLookTimes["Caja"]:F2} segundos");
+            resumen.AppendLine($"Tiempo mirando a la fogata: {colliderTotalLookTimes["Fogata"]:F2} segundos");
+            resumen.AppendLine($"Tiempo mirando a la respiración: {colliderTotalLookTimes["Respiracion"]:F2} segundos");
+            resumen.AppendLine($"Tiempo sin mirar a ningún elemento: {colliderTotalLookTimes["Ninguno"]:F2} segundos");
+
+            // Calcular porcentajes de atención
+            float tiempoTotal = Time.time - startTime;
+            if (tiempoTotal > 0)
+            {
+                resumen.AppendLine("\nPorcentajes de atención:");
+                resumen.AppendLine($"Árbol: {(colliderTotalLookTimes["Arbol"] / tiempoTotal * 100):F2}%");
+                resumen.AppendLine($"Caja: {(colliderTotalLookTimes["Caja"] / tiempoTotal * 100):F2}%");
+                resumen.AppendLine($"Fogata: {(colliderTotalLookTimes["Fogata"] / tiempoTotal * 100):F2}%");
+                resumen.AppendLine($"Respiración: {(colliderTotalLookTimes["Respiracion"] / tiempoTotal * 100):F2}%");
+                resumen.AppendLine($"Sin foco específico: {(colliderTotalLookTimes["Ninguno"] / tiempoTotal * 100):F2}%");
+            }
 
             // Resumen Caja
             resumen.AppendLine("\nCAJA:");
@@ -355,6 +543,15 @@ public class TelemetriaManager : MonoBehaviour
             // Guardar resumen
             Log("RESUMEN", resumen.ToString());
             SaveLogBuffer();
+
+            // Guardar archivo separado de resumen para consulta más fácil
+            string summaryPath = Path.Combine(
+                Application.persistentDataPath,
+                "Logs",
+                $"resumen_{DateTime.Now.ToString("yyyyMMdd_HHmmss")}.txt");
+
+            File.WriteAllText(summaryPath, resumen.ToString());
+            Debug.Log($"Resumen guardado en: {summaryPath}");
         }
         catch (Exception e)
         {
