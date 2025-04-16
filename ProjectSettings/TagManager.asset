@@ -35,6 +35,10 @@ TagManager:
   - PingPongBall
   - spot
   - Rock
+  - ColliderNorte
+  - ColliderSur
+  - ColliderEste
+  - ColliderOeste
   layers:
   - Default
   - TransparentFX

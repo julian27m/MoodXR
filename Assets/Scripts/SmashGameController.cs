@@ -7,7 +7,7 @@ public class SmashGameController : MonoBehaviour
 {
     [Header("Game Objects")]
     [SerializeField] private GameObject[] smashableObjects; // Los 11 objetos que se pueden golpear
-    [SerializeField] private TextMeshPro scoreText; // Texto para mostrar la puntuación
+    [SerializeField] public TextMeshPro scoreText; // Texto para mostrar la puntuación
 
     [Header("Game Settings")]
     [SerializeField] private float gameTime = 60f; // Duración del juego en segundos
@@ -229,6 +229,7 @@ public class SmashGameController : MonoBehaviour
     // Este método debe ser llamado cuando un objeto es golpeado por el bate
     public void OnObjectHit(GameObject hitObject, GameObject hitter)
     {
+
         if (gameRunning && hitter.CompareTag("Bat"))
         {
             // Solo sumamos puntos si el objeto no ha sido golpeado antes en esta aparición
@@ -237,6 +238,8 @@ public class SmashGameController : MonoBehaviour
                 // Incrementar puntuación
                 score++;
                 scoreText.text = score.ToString();
+                GetComponent<SmashGameTelemetry>()?.OnObjectHitForTelemetry(hitObject);
+
 
                 // Añadir a la lista de objetos ya golpeados para no sumar puntos múltiples
                 hitObjects.Add(hitObject);

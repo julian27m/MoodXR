@@ -7,7 +7,7 @@ public class BalloonGame : MonoBehaviour
 {
     [Header("Referencias")]
     [SerializeField] private GameObject[] balloons; // Array para almacenar los 40 globos en la escena
-    [SerializeField] private TextMeshPro scoreText;
+    [SerializeField] public TextMeshPro scoreText;
     [SerializeField] private AudioClip popSound;
 
     [Header("Configuración")]
@@ -155,6 +155,7 @@ public class BalloonGame : MonoBehaviour
         // Incrementar puntuación
         score++;
         UpdateScoreDisplay();
+        GetComponent<BalloonGameTelemetry>()?.OnBalloonPoppedForTelemetry(poppedBalloon);
 
         // Desactivar el globo explotado
         poppedBalloon.SetActive(false);

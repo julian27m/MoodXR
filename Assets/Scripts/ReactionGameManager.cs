@@ -70,6 +70,7 @@ public class ReactionGameManager : MonoBehaviour
     public void AddPoint()
     {
         AddPoints(1);
+        GetComponent<ReactionGameTelemetry>()?.OnButtonPressedForTelemetry();
     }
 
     /// <summary>
