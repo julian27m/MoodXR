@@ -829,7 +829,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 1:00
+  m_text: 2:00
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: eb44739c484b1b54bbc1a0d4d9dd1a50, type: 2}
   m_sharedMaterial: {fileID: -5839354330806206608, guid: eb44739c484b1b54bbc1a0d4d9dd1a50,
@@ -2678,7 +2678,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   initialMaterial: {fileID: 2100000, guid: 808a46864960f9f43ba7aa0bf587c24e, type: 2}
   changedMaterial: {fileID: 2100000, guid: 61eb5b7847a2a7842854f5d25c597653, type: 2}
-  gameDuration: 60
+  gameDuration: 120
   minTimeToChange: 2
   maxTimeToChange: 6
   addPointOnDeactivation: 1
@@ -3210,7 +3210,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   initialMaterial: {fileID: 2100000, guid: 808a46864960f9f43ba7aa0bf587c24e, type: 2}
   changedMaterial: {fileID: 2100000, guid: 61eb5b7847a2a7842854f5d25c597653, type: 2}
-  gameDuration: 60
+  gameDuration: 120
   minTimeToChange: 2
   maxTimeToChange: 6
   addPointOnDeactivation: 1
@@ -4126,7 +4126,7 @@ AudioSource:
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 8300000, guid: 18346805465379349b8b9a2ee07c6421, type: 3}
+  m_audioClip: {fileID: 8300000, guid: bdcba56ffb20fe8428aeff85550f023b, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
@@ -5994,7 +5994,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   timerText: {fileID: 149813470}
-  totalTime: 60
+  totalTime: 120
   NextButton: {fileID: 1527500579}
 --- !u!4 &966826135
 Transform:
@@ -8548,7 +8548,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   initialMaterial: {fileID: 2100000, guid: 808a46864960f9f43ba7aa0bf587c24e, type: 2}
   changedMaterial: {fileID: 2100000, guid: 61eb5b7847a2a7842854f5d25c597653, type: 2}
-  gameDuration: 60
+  gameDuration: 120
   minTimeToChange: 2
   maxTimeToChange: 6
   addPointOnDeactivation: 1
@@ -8580,7 +8580,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   initialMaterial: {fileID: 2100000, guid: 808a46864960f9f43ba7aa0bf587c24e, type: 2}
   changedMaterial: {fileID: 2100000, guid: 61eb5b7847a2a7842854f5d25c597653, type: 2}
-  gameDuration: 60
+  gameDuration: 120
   minTimeToChange: 2
   maxTimeToChange: 6
   addPointOnDeactivation: 1
@@ -12959,7 +12959,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   initialMaterial: {fileID: 2100000, guid: 808a46864960f9f43ba7aa0bf587c24e, type: 2}
   changedMaterial: {fileID: 2100000, guid: 61eb5b7847a2a7842854f5d25c597653, type: 2}
-  gameDuration: 60
+  gameDuration: 120
   minTimeToChange: 2
   maxTimeToChange: 6
   addPointOnDeactivation: 1

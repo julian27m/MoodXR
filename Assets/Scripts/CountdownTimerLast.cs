@@ -5,7 +5,7 @@ using System.Collections;
 public class CountdownTimerLast : MonoBehaviour
 {
     [SerializeField] public TextMeshPro timerText; // Cambiado a TextMeshProUGUI por compatibilidad
-    [SerializeField] public float totalTime = 60f; // 1 minuto en segundos
+    [SerializeField] public float totalTime = 120f; // 2 minutos en segundos
     [SerializeField] public GameObject OutButton;
     [SerializeField] public GameObject FurnitureRed;
     [SerializeField] public GameObject FurnitureWhite;
@@ -35,8 +35,8 @@ public class CountdownTimerLast : MonoBehaviour
         if (FurnitureWhite == null) Debug.LogError("FurnitureWhite no asignado en " + gameObject.name);
         if (LastAudio == null) Debug.LogWarning("LastAudio no asignado en " + gameObject.name);
 
-        // Inicializar el texto a "1:00"
-        if (timerText != null) timerText.text = "1:00";
+        // Inicializar el texto a "2:00"
+        if (timerText != null) timerText.text = "2:00";
         timeRemaining = totalTime;
 
         // Asegurar estado inicial
@@ -129,7 +129,7 @@ public class CountdownTimerLast : MonoBehaviour
     {
         isRunning = false;
         timeRemaining = totalTime;
-        if (timerText != null) timerText.text = "1:00";
+        if (timerText != null) timerText.text = "2:00";  // Actualizado a "2:00"
         Debug.Log("Timer reiniciado");
     }
 }

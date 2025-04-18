@@ -38,7 +38,11 @@ public class Shoot : MonoBehaviour
 
     [Header("UI References")]
     [Tooltip("Reference to the TextMeshPro component that will display the countdown")]
-    public TextMeshProUGUI countdownText;
+    public TextMeshPro countdownText;
+
+    [Header("Goal Settings")]
+    [Tooltip("Tag used for the goal trigger")]
+    public string goalTag = "Goal";
 
     // Reference to components
     private Rigidbody rb;
@@ -46,6 +50,11 @@ public class Shoot : MonoBehaviour
     private bool hasCollided = false;
     private int shotsFired = 0;
     private bool cycleActive = true;
+
+    // Conteo de goles
+    private int golesAnotados = 0;
+    // Flag para evitar contar goles múltiples veces en la misma jugada
+    private bool goalScoredThisShot = false;
 
     // Debug variables to visualize the trajectory
     private Vector3 calculatedVelocity;
@@ -164,6 +173,21 @@ public class Shoot : MonoBehaviour
         }
     }
 
+    // Añadido: Método para detectar cuando la pelota atraviesa el trigger del gol
+    void OnTriggerEnter(Collider other)
+    {
+        // Verificar si atravesó el collider con tag "Goal" y que no haya anotado gol en este tiro aún
+        if (!goalScoredThisShot && other.CompareTag(goalTag))
+        {
+            // Incrementar contador de goles
+            golesAnotados++;
+            goalScoredThisShot = true;
+
+            // Mostrar mensaje en debug log
+            Debug.Log("¡GOL DEL USUARIO! El usuario lleva " + golesAnotados + " goles");
+        }
+    }
+
     IEnumerator DisappearAfterDelay()
     {
         Debug.Log("Ball will disappear in " + disappearDelay + " seconds...");
@@ -179,7 +203,7 @@ public class Shoot : MonoBehaviour
         }
         else
         {
-            Debug.Log("Cycle complete. Total shots: " + shotsFired);
+            Debug.Log("Cycle complete. Total shots: " + shotsFired + ", Goles anotados: " + golesAnotados);
         }
     }
 
@@ -196,6 +220,8 @@ public class Shoot : MonoBehaviour
 
         // Reset collision state
         hasCollided = false;
+        // Reset goal scored flag for this shot
+        goalScoredThisShot = false;
 
         Debug.Log("Ball respawned at " + respawnPosition);
 
@@ -324,6 +350,9 @@ public class Shoot : MonoBehaviour
         shotsFired = 0;
         hasCollided = false;
         cycleActive = true;
+        // No reseteamos los goles ya que queremos mantener la cuenta durante toda la sesión
+        // Si quieres resetear los goles, descomenta la siguiente línea:
+        // golesAnotados = 0;
 
         // Clear the countdown text
         if (countdownText != null)
@@ -346,5 +375,18 @@ public class Shoot : MonoBehaviour
         {
             countdownText.text = " ";
         }
+    }
+
+    // Nueva función pública para obtener el número de goles
+    public int GetGolesAnotados()
+    {
+        return golesAnotados;
+    }
+
+    // Nueva función pública para resetear los goles (por si la necesitas)
+    public void ResetearGoles()
+    {
+        golesAnotados = 0;
+        Debug.Log("Contador de goles reseteado a 0");
     }
 }

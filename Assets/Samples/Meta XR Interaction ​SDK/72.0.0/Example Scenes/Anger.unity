@@ -762,7 +762,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 1:00
+  m_text: 2:00
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: eb44739c484b1b54bbc1a0d4d9dd1a50, type: 2}
   m_sharedMaterial: {fileID: -5839354330806206608, guid: eb44739c484b1b54bbc1a0d4d9dd1a50,
@@ -5055,8 +5055,8 @@ MonoBehaviour:
   - {fileID: 627978734}
   - {fileID: 281290358}
   scoreText: {fileID: 1495491261}
-  gameTime: 60
-  spawnInterval: 1.5
+  gameTime: 120
+  spawnInterval: 1.2
   spawnHeight: 1
   fallThreshold: 0.5
   sleepFrames: 3
@@ -6492,7 +6492,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   timerText: {fileID: 149813470}
-  totalTime: 60
+  totalTime: 120
   NextButton: {fileID: 1502620124}
 --- !u!4 &1023438336
 Transform:
@@ -15519,9 +15519,9 @@ MonoBehaviour:
   surCollider: {fileID: 1072152640}
   esteCollider: {fileID: 941599201}
   oesteCollider: {fileID: 145395072}
-  escenaSmashGame: MinijuegoSmash
-  escenaReactionGame: MinijuegoReaction
-  escenaBalloonGame: MinijuegoBalloon
+  escenaSmashGame: Anger
+  escenaReactionGame: AngerTwo
+  escenaBalloonGame: AngerThree
 --- !u!4 &1805414047
 Transform:
   m_ObjectHideFlags: 0

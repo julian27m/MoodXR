@@ -41,13 +41,23 @@ public class TelemetriaManagerAnger : MonoBehaviour
 
     [Header("Configuración de Escenas")]
     [Tooltip("Nombre de la escena del primer minijuego (Smash)")]
-    public string escenaSmashGame = "MinijuegoSmash";
+    public string escenaSmashGame = "Anger";
 
     [Tooltip("Nombre de la escena del segundo minijuego (Reaction)")]
-    public string escenaReactionGame = "MinijuegoReaction";
+    public string escenaReactionGame = "AngerTwo";
 
     [Tooltip("Nombre de la escena del tercer minijuego (Balloon)")]
-    public string escenaBalloonGame = "MinijuegoBalloon";
+    public string escenaBalloonGame = "AngerThree";
+
+    [Header("Duraciones Fijas")]
+    [Tooltip("Duración fija del minijuego Smash en segundos")]
+    public float smashGameDuration = 120f;
+
+    [Tooltip("Duración fija del minijuego Reaction en segundos")]
+    public float reactionGameDuration = 120f;
+
+    [Tooltip("Duración fija del minijuego Balloon en segundos")]
+    public float balloonGameDuration = 120f;
 
     // Variables privadas para el manejo de logs
     private string logFilePath;
@@ -88,6 +98,9 @@ public class TelemetriaManagerAnger : MonoBehaviour
     private List<string> sceneHistory = new List<string>();
     private List<float> sceneTransitionTimes = new List<float>();
 
+    private float ultimoRegistroButton = -5f; // Tiempo del último registro de botón
+    private float ultimoRegistroGlobo = -5f; // Tiempo del último registro de globo
+
     private void Awake()
     {
         // Implementación del Singleton
@@ -121,18 +134,32 @@ public class TelemetriaManagerAnger : MonoBehaviour
     private void InitializeSceneDictionaries()
     {
         // Inicializar diccionarios para cada escena posible
-        string[] sceneNames = new string[] { escenaSmashGame, escenaReactionGame, escenaBalloonGame };
+        // Incluir todas las escenas conocidas, incluyendo "Anger" (ya que parece estar duplicada)
+        // y "Close" (para registrar la atención en la escena final)
+        string[] sceneNames = new string[] {
+        "Anger",
+        escenaSmashGame,
+        escenaReactionGame,
+        escenaBalloonGame,
+        "Close"
+    };
 
         foreach (string sceneName in sceneNames)
         {
-            colliderTotalLookTimesByScene[sceneName] = new Dictionary<string, float>() {
+            // Solo inicializar si no existe ya
+            if (!colliderTotalLookTimesByScene.ContainsKey(sceneName))
+            {
+                colliderTotalLookTimesByScene[sceneName] = new Dictionary<string, float>() {
                 {"Norte", 0f},
                 {"Sur", 0f},
                 {"Este", 0f},
                 {"Oeste", 0f},
                 {"Ninguno", 0f}
             };
+            }
         }
+
+        Debug.Log("Diccionarios de escenas inicializados: " + string.Join(", ", colliderTotalLookTimesByScene.Keys));
     }
 
     private IEnumerator GenerarResumenConRetraso(float segundos)
@@ -155,12 +182,6 @@ public class TelemetriaManagerAnger : MonoBehaviour
             }
             Log($"FIN_COLLIDER_{currentColliderName.ToUpper()}", $"Escena: {currentSceneName}, Duración final: {tiempoMiradaFinal:F2} segundos");
         }
-        if (newSceneName == "Close")
-        {
-            Debug.Log("Escena Close detectada. Generando resumen...");
-            // Esperar un pequeño tiempo para asegurar que todos los datos estén guardados
-            StartCoroutine(GenerarResumenConRetraso(1.0f));
-        }
 
         // Registrar la transición
         float transitionTime = Time.time - startTime;
@@ -182,35 +203,165 @@ public class TelemetriaManagerAnger : MonoBehaviour
 
         Debug.Log($"Transición a escena: {newSceneName}. Índice: {currentSceneIndex}");
 
+        // Asegurarse de que el diccionario para la nueva escena exista
+        if (!colliderTotalLookTimesByScene.ContainsKey(newSceneName))
+        {
+            colliderTotalLookTimesByScene[newSceneName] = new Dictionary<string, float>() {
+            {"Norte", 0f},
+            {"Sur", 0f},
+            {"Este", 0f},
+            {"Oeste", 0f},
+            {"Ninguno", 0f}
+        };
+
+            Debug.Log($"Creado nuevo diccionario para la escena: {newSceneName}");
+        }
+
         // Buscar referencias a los colliders en la escena actual
         FindCollidersInScene();
+
+        // Si la nueva escena es Close, generar el resumen automáticamente
+        if (newSceneName == "Close")
+        {
+            Debug.Log("Escena Close detectada. Generando resumen...");
+            // Esperar un pequeño tiempo para asegurar que todos los datos estén guardados
+            StartCoroutine(GenerarResumenConRetraso(1.0f));
+        }
+
+        // Registrar inicio del minijuego correspondiente
+        if (newSceneName == escenaSmashGame)
+        {
+            RegistrarEvento("INICIO_MINIJUEGO_SMASH", "El minijuego de Smash ha sido iniciado");
+        }
+        else if (newSceneName == escenaReactionGame)
+        {
+            RegistrarEvento("INICIO_MINIJUEGO_REACTION", "El minijuego de Reaction ha sido iniciado");
+        }
+        else if (newSceneName == escenaBalloonGame)
+        {
+            RegistrarEvento("INICIO_MINIJUEGO_BALLOON", "El minijuego de Balloon ha sido iniciado");
+        }
     }
 
     private void FindCollidersInScene()
     {
-        // En cada cambio de escena, necesitamos encontrar los colliders correspondientes
-        // Esta función debería implementarse según la estructura específica de tus escenas
-
         Debug.Log("Buscando colliders en la escena: " + currentSceneName);
 
-        // Ejemplo: buscar colliders por etiquetas (tags)
+        // Buscar colliders por etiquetas (tags) primero
         GameObject norteObj = GameObject.FindGameObjectWithTag("ColliderNorte");
-        if (norteObj) norteCollider = norteObj.transform;
+        if (norteObj)
+        {
+            norteCollider = norteObj.transform;
+            Debug.Log("Encontrado ColliderNorte por tag: " + norteObj.name);
+        }
 
         GameObject surObj = GameObject.FindGameObjectWithTag("ColliderSur");
-        if (surObj) surCollider = surObj.transform;
+        if (surObj)
+        {
+            surCollider = surObj.transform;
+            Debug.Log("Encontrado ColliderSur por tag: " + surObj.name);
+        }
 
         GameObject esteObj = GameObject.FindGameObjectWithTag("ColliderEste");
-        if (esteObj) esteCollider = esteObj.transform;
+        if (esteObj)
+        {
+            esteCollider = esteObj.transform;
+            Debug.Log("Encontrado ColliderEste por tag: " + esteObj.name);
+        }
 
         GameObject oesteObj = GameObject.FindGameObjectWithTag("ColliderOeste");
-        if (oesteObj) oesteCollider = oesteObj.transform;
+        if (oesteObj)
+        {
+            oesteCollider = oesteObj.transform;
+            Debug.Log("Encontrado ColliderOeste por tag: " + oesteObj.name);
+        }
 
-        // También podríamos buscar la cámara o cabeza del jugador si cambia entre escenas
-        GameObject cameraObj = Camera.main?.gameObject;
-        if (cameraObj) playerHead = cameraObj.transform;
+        // Si no se encontraron por tag, buscar por nombre
+        if (norteCollider == null || surCollider == null || esteCollider == null || oesteCollider == null)
+        {
+            GameObject[] allObjects = GameObject.FindObjectsOfType<GameObject>();
+            foreach (GameObject obj in allObjects)
+            {
+                // Buscar por nombres que contengan las palabras clave
+                if (norteCollider == null && (obj.name.Contains("Norte") || obj.name.Contains("North")))
+                {
+                    norteCollider = obj.transform;
+                    Debug.Log("Encontrado ColliderNorte por nombre: " + obj.name);
+                }
+                else if (surCollider == null && (obj.name.Contains("Sur") || obj.name.Contains("South")))
+                {
+                    surCollider = obj.transform;
+                    Debug.Log("Encontrado ColliderSur por nombre: " + obj.name);
+                }
+                else if (esteCollider == null && (obj.name.Contains("Este") || obj.name.Contains("East")))
+                {
+                    esteCollider = obj.transform;
+                    Debug.Log("Encontrado ColliderEste por nombre: " + obj.name);
+                }
+                else if (oesteCollider == null && (obj.name.Contains("Oeste") || obj.name.Contains("West")))
+                {
+                    oesteCollider = obj.transform;
+                    Debug.Log("Encontrado ColliderOeste por nombre: " + obj.name);
+                }
+            }
+        }
+
+        // También buscar la cámara o cabeza del jugador
+        if (playerHead == null)
+        {
+            GameObject mainCamera = Camera.main?.gameObject;
+            if (mainCamera)
+            {
+                playerHead = mainCamera.transform;
+                Debug.Log("Usando cámara principal como referencia de mirada: " + mainCamera.name);
+            }
+            else
+            {
+                // Intentar encontrar otra cámara si la principal no está disponible
+                Camera[] cameras = Camera.allCameras;
+                if (cameras.Length > 0)
+                {
+                    playerHead = cameras[0].transform;
+                    Debug.Log("Usando cámara alternativa como referencia de mirada: " + cameras[0].name);
+                }
+            }
+        }
+
+        // Crear colliders virtuales si no se encuentran
+        CreateVirtualColliderIfMissing(ref norteCollider, "Norte", new Vector3(0, 0, 10));
+        CreateVirtualColliderIfMissing(ref surCollider, "Sur", new Vector3(0, 0, -10));
+        CreateVirtualColliderIfMissing(ref esteCollider, "Este", new Vector3(10, 0, 0));
+        CreateVirtualColliderIfMissing(ref oesteCollider, "Oeste", new Vector3(-10, 0, 0));
 
         ValidarColliders();
+    }
+
+    private void CreateVirtualColliderIfMissing(ref Transform collider, string name, Vector3 direction)
+    {
+        if (collider == null)
+        {
+            // Crear un objeto virtual para representar la dirección
+            GameObject virtualCollider = new GameObject("Virtual_Collider_" + name);
+
+            // Posicionar el collider en relación a la cámara
+            if (playerHead != null)
+            {
+                virtualCollider.transform.position = playerHead.position + direction;
+            }
+            else
+            {
+                // Si no hay referencia a la cámara, usar una posición predeterminada
+                virtualCollider.transform.position = direction;
+            }
+
+            // Asignar la referencia
+            collider = virtualCollider.transform;
+
+            // Hacer que el objeto sea hijo del TelemetriaManager para que persista entre escenas
+            virtualCollider.transform.parent = this.transform;
+
+            Debug.Log("Creado collider virtual para dirección " + name);
+        }
     }
 
     private void ValidarColliders()
@@ -346,14 +497,36 @@ public class TelemetriaManagerAnger : MonoBehaviour
     {
         if (playerHead == null || targetTransform == null) return false;
 
+        // Actualizar la posición del collider virtual si es uno de nuestros colliders virtuales
+        if (targetTransform.name.StartsWith("Virtual_Collider_"))
+        {
+            Vector3 direction = Vector3.zero;
+
+            if (targetTransform.name.Contains("Norte"))
+                direction = new Vector3(0, 0, 10);
+            else if (targetTransform.name.Contains("Sur"))
+                direction = new Vector3(0, 0, -10);
+            else if (targetTransform.name.Contains("Este"))
+                direction = new Vector3(10, 0, 0);
+            else if (targetTransform.name.Contains("Oeste"))
+                direction = new Vector3(-10, 0, 0);
+
+            targetTransform.position = playerHead.position + direction;
+        }
+
         // Calcula el vector desde la cabeza del usuario hasta el objeto
         Vector3 viewVector = Vector3.Normalize(targetTransform.position - playerHead.position);
 
         // Calcula el producto escalar (dot product) para determinar la alineación
         float dotView = Vector3.Dot(playerHead.forward, viewVector);
 
+        // Si estamos usando colliders virtuales, ajustar el umbral para ser menos estricto
+        float thresholdToUse = targetTransform.name.StartsWith("Virtual_Collider_")
+            ? alignmentThreshold * 0.9f  // Reducir el umbral un 10% para los colliders virtuales
+            : alignmentThreshold;
+
         // Retorna true si el dot product es mayor que el umbral
-        return dotView >= alignmentThreshold;
+        return dotView >= thresholdToUse;
     }
 
     private void CreateLogFile()
@@ -482,10 +655,26 @@ public class TelemetriaManagerAnger : MonoBehaviour
         GuardarResumen();
     }
 
+    // Modificación del método GuardarResumen para usar nuestra función personalizada
     private void GuardarResumen()
     {
         try
         {
+            // Asegurarnos que todos los diccionarios de escenas estén inicializados
+            foreach (string escena in sceneHistory)
+            {
+                if (!colliderTotalLookTimesByScene.ContainsKey(escena))
+                {
+                    colliderTotalLookTimesByScene[escena] = new Dictionary<string, float>() {
+                    {"Norte", 0f},
+                    {"Sur", 0f},
+                    {"Este", 0f},
+                    {"Oeste", 0f},
+                    {"Ninguno", 0f}
+                };
+                }
+            }
+
             // Calcular estadísticas de efectividad para cada minijuego
             float efectividadSmash = CalcularEfectividadSmash();
             float efectividadReaction = CalcularEfectividadReaction();
@@ -519,70 +708,32 @@ public class TelemetriaManagerAnger : MonoBehaviour
                 resumen.AppendLine($"{i + 1}. {escena} - Inicio: {tiempo:F2} segundos, Duración: {duracionEscena:F2} segundos");
             }
 
-            // Resumen de atención del usuario por escena
-            resumen.AppendLine("\nATENCIÓN DEL USUARIO:");
+            // Generar resumen de atención usando nuestra función especializada
+            GenerarResumenAtencion(resumen);
 
-            // Procesar cada escena que fue visitada (excepto Close si existe)
-            foreach (string escena in sceneHistory.ToArray())
-            {
-                // Ignorar escena de cierre
-                if (escena == "Close")
-                    continue;
-
-                if (colliderTotalLookTimesByScene.ContainsKey(escena))
-                {
-                    Dictionary<string, float> tiemposMirada = colliderTotalLookTimesByScene[escena];
-
-                    // Calcular tiempos totales para esta escena
-                    float tiempoTotalEscena = CalcularTiempoTotalEscena(escena);
-
-                    resumen.AppendLine($"\nEscena: {escena}");
-                    resumen.AppendLine($"Tiempo total en esta escena: {tiempoTotalEscena:F2} segundos");
-                    resumen.AppendLine($"Tiempo mirando al norte: {tiemposMirada["Norte"]:F2} segundos");
-                    resumen.AppendLine($"Tiempo mirando al sur: {tiemposMirada["Sur"]:F2} segundos");
-                    resumen.AppendLine($"Tiempo mirando al este: {tiemposMirada["Este"]:F2} segundos");
-                    resumen.AppendLine($"Tiempo mirando al oeste: {tiemposMirada["Oeste"]:F2} segundos");
-                    resumen.AppendLine($"Tiempo sin mirar a ningún elemento: {tiemposMirada["Ninguno"]:F2} segundos");
-
-                    // Calcular tiempo total registrado en miradas
-                    float tiempoTotalRegistrado = tiemposMirada["Norte"] + tiemposMirada["Sur"] +
-                                                tiemposMirada["Este"] + tiemposMirada["Oeste"] +
-                                                tiemposMirada["Ninguno"];
-
-                    // Calcular porcentajes solo si hay tiempo total
-                    if (tiempoTotalEscena > 0)
-                    {
-                        resumen.AppendLine("Porcentajes de atención:");
-                        resumen.AppendLine($"Norte: {(tiemposMirada["Norte"] / tiempoTotalEscena * 100):F2}%");
-                        resumen.AppendLine($"Sur: {(tiemposMirada["Sur"] / tiempoTotalEscena * 100):F2}%");
-                        resumen.AppendLine($"Este: {(tiemposMirada["Este"] / tiempoTotalEscena * 100):F2}%");
-                        resumen.AppendLine($"Oeste: {(tiemposMirada["Oeste"] / tiempoTotalEscena * 100):F2}%");
-                        resumen.AppendLine($"Sin foco específico: {(tiemposMirada["Ninguno"] / tiempoTotalEscena * 100):F2}%");
-                    }
-
-                    // Advertencia si hay discrepancia significativa en los tiempos registrados
-                    if (tiempoTotalRegistrado > 0 && Math.Abs(tiempoTotalRegistrado - tiempoTotalEscena) > 5.0f)
-                    {
-                        resumen.AppendLine($"Nota: Hay una diferencia de {(tiempoTotalEscena - tiempoTotalRegistrado):F2} segundos " +
-                                          $"entre el tiempo total de la escena y el tiempo total registrado en miradas.");
-                    }
-                }
-            }
-
-            // Resumen de minijuegos
+            // Resumen de minijuegos con duraciones fijas de 120 segundos
             resumen.AppendLine("\nRESUMEN DE MINIJUEGOS:");
 
-            // Minijuego Smash
+            // Minijuego Smash - duración fija de 120 segundos
             resumen.AppendLine("\nMINIJUEGO SMASH (Golpear objetos):");
             resumen.AppendLine($"Objetos golpeados: {smashObjectsHit}");
             if (smashObjectsHit > 0)
             {
-                float tiempoTotalSmash = CalcularTiempoTotalEscena(escenaSmashGame);
-                resumen.AppendLine($"Duración del minijuego: {tiempoTotalSmash:F2} segundos");
+                resumen.AppendLine($"Duración del minijuego: 120,00 segundos");
                 resumen.AppendLine($"Efectividad media: {efectividadSmash:F2} objetos por segundo");
-                resumen.AppendLine($"Tiempo medio entre golpes: {(1 / efectividadSmash):F2} segundos por objeto");
-                // Añadir estadística en formato más legible
-                resumen.AppendLine($"Ritmo: 1 objeto golpeado cada {(1 / efectividadSmash):F2} segundos");
+
+                // Evitar división por cero
+                if (efectividadSmash > 0)
+                {
+                    float tiempoMedioPorObjeto = 1 / efectividadSmash;
+                    resumen.AppendLine($"Tiempo medio entre golpes: {tiempoMedioPorObjeto:F2} segundos por objeto");
+                    resumen.AppendLine($"Ritmo: 1 objeto golpeado cada {tiempoMedioPorObjeto:F2} segundos");
+                }
+                else
+                {
+                    resumen.AppendLine("Tiempo medio entre golpes: N/A");
+                    resumen.AppendLine("Ritmo: N/A");
+                }
 
                 // Análisis de consistencia (opcional)
                 if (smashHitTimes.Count > 1)
@@ -602,17 +753,26 @@ public class TelemetriaManagerAnger : MonoBehaviour
                 }
             }
 
-            // Minijuego Reaction
+            // Minijuego Reaction - duración fija de 120 segundos
             resumen.AppendLine("\nMINIJUEGO REACTION (Botones de reacción):");
             resumen.AppendLine($"Botones presionados: {reactionButtonsPressed}");
             if (reactionButtonsPressed > 0)
             {
-                float tiempoTotalReaction = CalcularTiempoTotalEscena(escenaReactionGame);
-                resumen.AppendLine($"Duración del minijuego: {tiempoTotalReaction:F2} segundos");
+                resumen.AppendLine($"Duración del minijuego: 120,00 segundos");
                 resumen.AppendLine($"Efectividad media: {efectividadReaction:F2} botones por segundo");
-                resumen.AppendLine($"Tiempo medio entre pulsaciones: {(1 / efectividadReaction):F2} segundos por botón");
-                // Añadir estadística en formato más legible
-                resumen.AppendLine($"Ritmo: 1 botón presionado cada {(1 / efectividadReaction):F2} segundos");
+
+                // Evitar división por cero
+                if (efectividadReaction > 0)
+                {
+                    float tiempoMedioPorBoton = 1 / efectividadReaction;
+                    resumen.AppendLine($"Tiempo medio entre pulsaciones: {tiempoMedioPorBoton:F2} segundos por botón");
+                    resumen.AppendLine($"Ritmo: 1 botón presionado cada {tiempoMedioPorBoton:F2} segundos");
+                }
+                else
+                {
+                    resumen.AppendLine("Tiempo medio entre pulsaciones: N/A");
+                    resumen.AppendLine("Ritmo: N/A");
+                }
 
                 // Análisis de consistencia (opcional)
                 if (reactionPressTimes.Count > 1)
@@ -632,17 +792,26 @@ public class TelemetriaManagerAnger : MonoBehaviour
                 }
             }
 
-            // Minijuego Balloon
+            // Minijuego Balloon - duración fija de 120 segundos
             resumen.AppendLine("\nMINIJUEGO BALLOON (Reventar globos):");
             resumen.AppendLine($"Globos reventados: {balloonsPopped}");
             if (balloonsPopped > 0)
             {
-                float tiempoTotalBalloon = CalcularTiempoTotalEscena(escenaBalloonGame);
-                resumen.AppendLine($"Duración del minijuego: {tiempoTotalBalloon:F2} segundos");
+                resumen.AppendLine($"Duración del minijuego: 120,00 segundos");
                 resumen.AppendLine($"Efectividad media: {efectividadBalloon:F2} globos por segundo");
-                resumen.AppendLine($"Tiempo medio entre globos: {(1 / efectividadBalloon):F2} segundos por globo");
-                // Añadir estadística en formato más legible
-                resumen.AppendLine($"Ritmo: 1 globo reventado cada {(1 / efectividadBalloon):F2} segundos");
+
+                // Evitar división por cero
+                if (efectividadBalloon > 0)
+                {
+                    float tiempoMedioPorGlobo = 1 / efectividadBalloon;
+                    resumen.AppendLine($"Tiempo medio entre globos: {tiempoMedioPorGlobo:F2} segundos por globo");
+                    resumen.AppendLine($"Ritmo: 1 globo reventado cada {tiempoMedioPorGlobo:F2} segundos");
+                }
+                else
+                {
+                    resumen.AppendLine("Tiempo medio entre globos: N/A");
+                    resumen.AppendLine("Ritmo: N/A");
+                }
 
                 // Análisis de consistencia (opcional)
                 if (balloonPopTimes.Count > 1)
@@ -662,21 +831,27 @@ public class TelemetriaManagerAnger : MonoBehaviour
                 }
             }
 
-            // Resumen general de la experiencia
+            // Resumen general de la experiencia - tiempo total fijo de 360 segundos (3 minijuegos x 120 segundos)
             resumen.AppendLine("\nRESUMEN GENERAL DE EFECTIVIDAD:");
-            float tiempoTotalMinijuegos = CalcularTiempoTotalEscena(escenaSmashGame) +
-                                         CalcularTiempoTotalEscena(escenaReactionGame) +
-                                         CalcularTiempoTotalEscena(escenaBalloonGame);
+            float tiempoTotalMinijuegos = 360f; // 3 minijuegos de 120 segundos
 
             int totalAcciones = smashObjectsHit + reactionButtonsPressed + balloonsPopped;
 
-            if (tiempoTotalMinijuegos > 0 && totalAcciones > 0)
+            if (totalAcciones > 0)
             {
                 float efectividadGeneral = totalAcciones / tiempoTotalMinijuegos;
                 resumen.AppendLine($"Total acciones en minijuegos: {totalAcciones}");
                 resumen.AppendLine($"Tiempo total en minijuegos: {tiempoTotalMinijuegos:F2} segundos");
                 resumen.AppendLine($"Efectividad general: {efectividadGeneral:F2} acciones por segundo");
-                resumen.AppendLine($"Ritmo general: 1 acción cada {(1 / efectividadGeneral):F2} segundos");
+
+                if (efectividadGeneral > 0)
+                {
+                    resumen.AppendLine($"Ritmo general: 1 acción cada {(1 / efectividadGeneral):F2} segundos");
+                }
+                else
+                {
+                    resumen.AppendLine("Ritmo general: N/A");
+                }
             }
 
             // Guardar resumen
@@ -694,7 +869,85 @@ public class TelemetriaManagerAnger : MonoBehaviour
         }
         catch (Exception e)
         {
-            Debug.LogError($"Error al generar resumen: {e.Message}");
+            Debug.LogError($"Error al generar resumen: {e.Message}\n{e.StackTrace}");
+        }
+    }
+
+    private void GenerarResumenAtencion(StringBuilder resumen)
+    {
+        // Resumen de atención del usuario por escena
+        resumen.AppendLine("\nATENCIÓN DEL USUARIO:");
+
+        // Lista para almacenar escenas ya procesadas para evitar duplicados
+        List<string> escenasProcesadas = new List<string>();
+
+        // Procesar cada escena que fue visitada (excepto duplicados)
+        foreach (string escena in sceneHistory.ToArray())
+        {
+            // Ignorar escena de cierre y duplicados
+            if (escena == "Close" || escenasProcesadas.Contains(escena))
+                continue;
+
+            escenasProcesadas.Add(escena);
+
+            if (colliderTotalLookTimesByScene.ContainsKey(escena))
+            {
+                Dictionary<string, float> tiemposMirada = colliderTotalLookTimesByScene[escena];
+
+                // Calcular el tiempo real de la escena usando los datos de transición
+                float tiempoRealEscena = 0f;
+                for (int i = 0; i < sceneHistory.Count; i++)
+                {
+                    if (sceneHistory[i] == escena)
+                    {
+                        float inicioTiempo = sceneTransitionTimes[i];
+                        float finTiempo;
+
+                        if (i < sceneHistory.Count - 1)
+                        {
+                            finTiempo = sceneTransitionTimes[i + 1];
+                        }
+                        else
+                        {
+                            finTiempo = Time.time - startTime;
+                        }
+
+                        tiempoRealEscena += (finTiempo - inicioTiempo);
+                    }
+                }
+
+                // Usar siempre el tiempo real de la escena (no el de los minijuegos)
+                resumen.AppendLine($"\nEscena: {escena}");
+                resumen.AppendLine($"Tiempo total en esta escena: {tiempoRealEscena:F2} segundos");
+                resumen.AppendLine($"Tiempo mirando al norte: {tiemposMirada["Norte"]:F2} segundos");
+                resumen.AppendLine($"Tiempo mirando al sur: {tiemposMirada["Sur"]:F2} segundos");
+                resumen.AppendLine($"Tiempo mirando al este: {tiemposMirada["Este"]:F2} segundos");
+                resumen.AppendLine($"Tiempo mirando al oeste: {tiemposMirada["Oeste"]:F2} segundos");
+                resumen.AppendLine($"Tiempo sin mirar a ningún elemento: {tiemposMirada["Ninguno"]:F2} segundos");
+
+                // Calcular tiempo total registrado en miradas
+                float tiempoTotalRegistrado = tiemposMirada["Norte"] + tiemposMirada["Sur"] +
+                                            tiemposMirada["Este"] + tiemposMirada["Oeste"] +
+                                            tiemposMirada["Ninguno"];
+
+                // Calcular porcentajes solo si hay tiempo total
+                if (tiempoRealEscena > 0)
+                {
+                    resumen.AppendLine("Porcentajes de atención:");
+                    resumen.AppendLine($"Norte: {(tiemposMirada["Norte"] / tiempoRealEscena * 100):F2}%");
+                    resumen.AppendLine($"Sur: {(tiemposMirada["Sur"] / tiempoRealEscena * 100):F2}%");
+                    resumen.AppendLine($"Este: {(tiemposMirada["Este"] / tiempoRealEscena * 100):F2}%");
+                    resumen.AppendLine($"Oeste: {(tiemposMirada["Oeste"] / tiempoRealEscena * 100):F2}%");
+                    resumen.AppendLine($"Sin foco específico: {(tiemposMirada["Ninguno"] / tiempoRealEscena * 100):F2}%");
+                }
+
+                // Advertencia si hay discrepancia significativa en los tiempos registrados
+                if (tiempoTotalRegistrado > 0 && Math.Abs(tiempoTotalRegistrado - tiempoRealEscena) > 5.0f)
+                {
+                    resumen.AppendLine($"Nota: Hay una diferencia de {(tiempoRealEscena - tiempoTotalRegistrado):F2} segundos " +
+                                      $"entre el tiempo total de la escena y el tiempo total registrado en miradas.");
+                }
+            }
         }
     }
 
@@ -714,6 +967,17 @@ public class TelemetriaManagerAnger : MonoBehaviour
 
     private float CalcularTiempoTotalEscena(string nombreEscena)
     {
+        // Usar duración fija para los minijuegos
+        if (nombreEscena == escenaSmashGame)
+            return smashGameDuration;
+
+        if (nombreEscena == escenaReactionGame)
+            return reactionGameDuration;
+
+        if (nombreEscena == escenaBalloonGame)
+            return balloonGameDuration;
+
+        // Para otras escenas, calcular el tiempo real
         float tiempoTotal = 0f;
 
         for (int i = 0; i < sceneHistory.Count; i++)
@@ -729,12 +993,15 @@ public class TelemetriaManagerAnger : MonoBehaviour
                 }
                 else
                 {
-                    finTiempo = Time.time - startTime;
+                    finTiempo = CalcularTiempoTotalExperiencia();
                 }
 
                 tiempoTotal += (finTiempo - inicioTiempo);
             }
         }
+
+        // Asegurarnos de que el tiempo nunca sea cero para evitar divisiones por cero
+        tiempoTotal = Mathf.Max(0.001f, tiempoTotal);
 
         return tiempoTotal;
     }
@@ -744,31 +1011,8 @@ public class TelemetriaManagerAnger : MonoBehaviour
         // Si no hay objetos golpeados, devolver 0
         if (smashObjectsHit == 0) return 0f;
 
-        // Calcular el tiempo total del minijuego Smash
-        float tiempoTotalSmash = 0f;
-        for (int i = 0; i < sceneHistory.Count; i++)
-        {
-            if (sceneHistory[i] == escenaSmashGame)
-            {
-                float finTiempo;
-                if (i < sceneHistory.Count - 1)
-                {
-                    finTiempo = sceneTransitionTimes[i + 1];
-                }
-                else
-                {
-                    finTiempo = Time.time - startTime;
-                }
-
-                tiempoTotalSmash += (finTiempo - sceneTransitionTimes[i]);
-            }
-        }
-
-        // Si el tiempo es 0 (no se jugó), devolver 0
-        if (tiempoTotalSmash <= 0f) return 0f;
-
-        // Calcular objetos por segundo
-        return smashObjectsHit / tiempoTotalSmash;
+        // Usar tiempo fijo de 120 segundos
+        return smashObjectsHit / 120f;
     }
 
     private float CalcularEfectividadReaction()
@@ -776,63 +1020,18 @@ public class TelemetriaManagerAnger : MonoBehaviour
         // Si no hay botones presionados, devolver 0
         if (reactionButtonsPressed == 0) return 0f;
 
-        // Calcular el tiempo total del minijuego Reaction
-        float tiempoTotalReaction = 0f;
-        for (int i = 0; i < sceneHistory.Count; i++)
-        {
-            if (sceneHistory[i] == escenaReactionGame)
-            {
-                float finTiempo;
-                if (i < sceneHistory.Count - 1)
-                {
-                    finTiempo = sceneTransitionTimes[i + 1];
-                }
-                else
-                {
-                    finTiempo = Time.time - startTime;
-                }
-
-                tiempoTotalReaction += (finTiempo - sceneTransitionTimes[i]);
-            }
-        }
-
-        // Si el tiempo es 0 (no se jugó), devolver 0
-        if (tiempoTotalReaction <= 0f) return 0f;
-
-        // Calcular botones por segundo
-        return reactionButtonsPressed / tiempoTotalReaction;
+        // Usar tiempo fijo de 120 segundos
+        return reactionButtonsPressed / 120f;
     }
+
 
     private float CalcularEfectividadBalloon()
     {
         // Si no hay globos reventados, devolver 0
         if (balloonsPopped == 0) return 0f;
 
-        // Calcular el tiempo total del minijuego Balloon
-        float tiempoTotalBalloon = 0f;
-        for (int i = 0; i < sceneHistory.Count; i++)
-        {
-            if (sceneHistory[i] == escenaBalloonGame)
-            {
-                float finTiempo;
-                if (i < sceneHistory.Count - 1)
-                {
-                    finTiempo = sceneTransitionTimes[i + 1];
-                }
-                else
-                {
-                    finTiempo = Time.time - startTime;
-                }
-
-                tiempoTotalBalloon += (finTiempo - sceneTransitionTimes[i]);
-            }
-        }
-
-        // Si el tiempo es 0 (no se jugó), devolver 0
-        if (tiempoTotalBalloon <= 0f) return 0f;
-
-        // Calcular globos por segundo
-        return balloonsPopped / tiempoTotalBalloon;
+        // Usar tiempo fijo de 120 segundos
+        return balloonsPopped / 120f;
     }
 
     // ==== Métodos públicos para registrar eventos desde otros scripts ====
@@ -843,6 +1042,14 @@ public class TelemetriaManagerAnger : MonoBehaviour
         try
         {
             if (!isLogReady) return;
+
+            // SOLUCIÓN: Verificar si el nombre del objeto contiene "desconocido"
+            // Si es así, ignorarlo para evitar contar dos veces
+            if (nombreObjeto.Contains("desconocido"))
+            {
+                Debug.Log($"Ignorando registro duplicado: {nombreObjeto}");
+                return;
+            }
 
             smashObjectsHit++;
             float tiempoActual = Time.time - startTime;
@@ -865,18 +1072,33 @@ public class TelemetriaManagerAnger : MonoBehaviour
         {
             if (!isLogReady) return;
 
-            reactionButtonsPressed++;
+            // Obtener el tiempo actual
             float tiempoActual = Time.time - startTime;
+
+            // Rechazar registros demasiado cercanos al anterior
+            // Usamos un umbral más amplio de 0.05 segundos
+            if (tiempoActual - ultimoRegistroButton < 0.05f)
+            {
+                Debug.Log($"Ignorando registro duplicado de botón. Tiempo desde último: {tiempoActual - ultimoRegistroButton:F4}s");
+                return;
+            }
+
+            // Actualizar el tiempo del último registro
+            ultimoRegistroButton = tiempoActual;
+
+            // Registrar el evento
+            reactionButtonsPressed++;
             reactionPressTimes.Add(tiempoActual);
 
             Log("OPRIME_BOTON", $"Número: {reactionButtonsPressed}, Tiempo: {tiempoActual:F2}");
-            SaveLogBuffer(); // Guardar inmediatamente
+            SaveLogBuffer();
         }
         catch (Exception e)
         {
             Debug.LogError($"Error en RegistrarBotonPresionado: {e.Message}");
         }
     }
+
 
     // Eventos del minijuego Balloon
     public void RegistrarGloboGolpeado()
@@ -885,12 +1107,26 @@ public class TelemetriaManagerAnger : MonoBehaviour
         {
             if (!isLogReady) return;
 
-            balloonsPopped++;
+            // Obtener el tiempo actual
             float tiempoActual = Time.time - startTime;
+
+            // Rechazar registros demasiado cercanos al anterior
+            // Usamos un umbral más amplio de 0.05 segundos
+            if (tiempoActual - ultimoRegistroGlobo < 0.05f)
+            {
+                Debug.Log($"Ignorando registro duplicado de globo. Tiempo desde último: {tiempoActual - ultimoRegistroGlobo:F4}s");
+                return;
+            }
+
+            // Actualizar el tiempo del último registro
+            ultimoRegistroGlobo = tiempoActual;
+
+            // Registrar el evento
+            balloonsPopped++;
             balloonPopTimes.Add(tiempoActual);
 
             Log("GLOBO_GOLPEADO", $"Número: {balloonsPopped}, Tiempo: {tiempoActual:F2}");
-            SaveLogBuffer(); // Guardar inmediatamente
+            SaveLogBuffer();
         }
         catch (Exception e)
         {
@@ -913,4 +1149,21 @@ public class TelemetriaManagerAnger : MonoBehaviour
             Debug.LogError($"Error en RegistrarEvento: {e.Message}");
         }
     }
+
+    // Método para limpiar todos los datos (llamar cuando se reinicia la aplicación)
+    public void Reset()
+    {
+        smashObjectsHit = 0;
+        reactionButtonsPressed = 0;
+        balloonsPopped = 0;
+        smashHitTimes.Clear();
+        reactionPressTimes.Clear();
+        balloonPopTimes.Clear();
+        smashHitObjects.Clear();
+        ultimoRegistroButton = -5f;
+        ultimoRegistroGlobo = -5f;
+
+        Debug.Log("Datos de telemetría reiniciados");
+    }
 }
+
