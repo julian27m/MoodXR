@@ -12,6 +12,9 @@ public class Shoot : MonoBehaviour
     [Tooltip("Delay in seconds before shooting after spawning")]
     public float shootDelay = 5f;
 
+    [Tooltip("Tiempo fijo en segundos antes de que la pelota desaparezca tras ser lanzada")]
+    public float fixedDisappearDelay = 5f;
+
     [Header("Target Area Settings")]
     [Tooltip("The minimum bounds of the target area")]
     public Vector3 targetAreaMin = new Vector3(-3.48f, 0.261f, 0f);
@@ -22,23 +25,16 @@ public class Shoot : MonoBehaviour
     [Tooltip("If true, draws the target area as a wireframe in the editor")]
     public bool showTargetArea = true;
 
-    [Header("Collision Settings")]
-    [Tooltip("Tag of objects that will trigger the disappearance countdown")]
-    public string collisionTag = "Collider";
-
-    [Tooltip("Time in seconds before ball disappears after collision")]
-    public float disappearDelay = 5f;
-
     [Header("Respawn Settings")]
     [Tooltip("The position to respawn the ball at")]
     public Vector3 respawnPosition = new Vector3(0f, 0.258f, 11f);
 
     [Tooltip("Total number of shots before cycle ends")]
-    public int totalShots = 3;
+    public int totalShots = 5;
 
     [Header("UI References")]
     [Tooltip("Reference to the TextMeshPro component that will display the countdown")]
-    public TextMeshPro countdownText;
+    public TextMeshProUGUI countdownText;
 
     [Header("Goal Settings")]
     [Tooltip("Tag used for the goal trigger")]
@@ -47,12 +43,13 @@ public class Shoot : MonoBehaviour
     // Reference to components
     private Rigidbody rb;
     private Vector3 currentTargetPoint;
-    private bool hasCollided = false;
-    private int shotsFired = 0;
+    private bool shotInProgress = false;
+    public int shotsFired = 0;
     private bool cycleActive = true;
 
     // Conteo de goles
     private int golesAnotados = 0;
+    private int golesAtajados = 0;
     // Flag para evitar contar goles múltiples veces en la misma jugada
     private bool goalScoredThisShot = false;
 
@@ -160,20 +157,7 @@ public class Shoot : MonoBehaviour
         Gizmos.DrawWireSphere(respawnPosition, 0.3f);
     }
 
-    void OnCollisionEnter(Collision collision)
-    {
-        // Check if we collided with an object with the specified tag
-        if (!hasCollided && collision.gameObject.CompareTag(collisionTag))
-        {
-            Debug.Log("Ball collided with an object tagged: " + collisionTag);
-            hasCollided = true;
-
-            // Start disappear countdown
-            StartCoroutine(DisappearAfterDelay());
-        }
-    }
-
-    // Añadido: Método para detectar cuando la pelota atraviesa el trigger del gol
+    // Método para detectar cuando la pelota atraviesa el trigger del gol
     void OnTriggerEnter(Collider other)
     {
         // Verificar si atravesó el collider con tag "Goal" y que no haya anotado gol en este tiro aún
@@ -183,27 +167,80 @@ public class Shoot : MonoBehaviour
             golesAnotados++;
             goalScoredThisShot = true;
 
+            // Incrementar goles recibidos en la base de datos
+            if (PlayerDataManager.Instance != null)
+            {
+                PlayerDataManager.Instance.IncrementGolesRecibidos();
+                Debug.Log("Gol registrado en la base de datos para el jugador: " +
+                         PlayerDataManager.Instance.GetCurrentPlayerName());
+            }
+            else
+            {
+                Debug.LogWarning("PlayerDataManager no encontrado. No se pudo registrar el gol en la base de datos.");
+            }
+
             // Mostrar mensaje en debug log
             Debug.Log("¡GOL DEL USUARIO! El usuario lleva " + golesAnotados + " goles");
         }
     }
 
-    IEnumerator DisappearAfterDelay()
+    // Método para registrar gol atajado
+    private void RegisterGoalSaved()
     {
-        Debug.Log("Ball will disappear in " + disappearDelay + " seconds...");
+        if (!goalScoredThisShot)
+        {
+            golesAtajados++;
 
-        // Wait for the specified delay
-        yield return new WaitForSeconds(disappearDelay);
+            // Incrementar goles atajados en la base de datos
+            if (PlayerDataManager.Instance != null)
+            {
+                PlayerDataManager.Instance.IncrementGolesAtajados();
+                Debug.Log("Gol atajado registrado en la base de datos para el jugador: " +
+                         PlayerDataManager.Instance.GetCurrentPlayerName());
+            }
+            else
+            {
+                Debug.LogWarning("PlayerDataManager no encontrado. No se pudo registrar el gol atajado en la base de datos.");
+            }
 
-        // If we haven't reached the total shots limit, respawn
+            Debug.Log("¡GOL ATAJADO! El usuario lleva " + golesAtajados + " goles atajados");
+        }
+    }
+
+    // Método para desaparecer la pelota después de un tiempo fijo tras el lanzamiento
+    IEnumerator DisappearAfterFixedDelay()
+    {
+        // Esperar el tiempo fijo
+        yield return new WaitForSeconds(fixedDisappearDelay);
+
+        // Verificar si ha marcado un gol, si no ha marcado, se considera atajado
+        if (!goalScoredThisShot)
+        {
+            RegisterGoalSaved();
+        }
+
+        // Si no hemos llegado al límite de tiros, respawnear
         if (shotsFired < totalShots && cycleActive)
         {
-            yield return new WaitForSeconds(0.5f); // Brief pause before respawning
+            yield return new WaitForSeconds(0.5f); // Breve pausa antes de respawnear
             Respawn();
         }
         else
         {
-            Debug.Log("Cycle complete. Total shots: " + shotsFired + ", Goles anotados: " + golesAnotados);
+            // Ciclo completado
+            Debug.Log("Ciclo completo. Total tiros: " + shotsFired +
+                      ", Goles recibidos: " + golesAnotados +
+                      ", Goles atajados: " + golesAtajados);
+
+            // Guardar estadísticas finales en la base de datos
+            if (PlayerDataManager.Instance != null)
+            {
+                PlayerDataManager.Instance.UpdateCurrentSessionStats(golesAtajados, golesAnotados);
+                Debug.Log("Estadísticas finales guardadas en la base de datos.");
+            }
+
+            // Desactivar la pelota
+            gameObject.SetActive(false);
         }
     }
 
@@ -219,8 +256,7 @@ public class Shoot : MonoBehaviour
         transform.rotation = Quaternion.identity;
 
         // Reset collision state
-        hasCollided = false;
-        // Reset goal scored flag for this shot
+        shotInProgress = false;
         goalScoredThisShot = false;
 
         Debug.Log("Ball respawned at " + respawnPosition);
@@ -258,6 +294,7 @@ public class Shoot : MonoBehaviour
 
         // Increment shot counter
         shotsFired++;
+        shotInProgress = true;
 
         // Shoot the ball
         Debug.Log("Shooting ball now! (Shot " + shotsFired + " of " + totalShots + ")");
@@ -279,6 +316,9 @@ public class Shoot : MonoBehaviour
         Debug.Log("Time scale: " + timeScale + " (higher = slower ball)");
         Debug.Log("Estimated time to target: " + (CalculateBaseTime() * timeScale) + " seconds");
         Debug.Log("Ball shot towards target: " + currentTargetPoint);
+
+        // Iniciar el temporizador para que la pelota desaparezca después de un tiempo fijo
+        StartCoroutine(DisappearAfterFixedDelay());
     }
 
     void GenerateTargetPoint()
@@ -348,11 +388,11 @@ public class Shoot : MonoBehaviour
 
         // Reset state
         shotsFired = 0;
-        hasCollided = false;
+        shotInProgress = false;
+        goalScoredThisShot = false;
         cycleActive = true;
-        // No reseteamos los goles ya que queremos mantener la cuenta durante toda la sesión
-        // Si quieres resetear los goles, descomenta la siguiente línea:
-        // golesAnotados = 0;
+        golesAnotados = 0;
+        golesAtajados = 0;
 
         // Clear the countdown text
         if (countdownText != null)
@@ -375,18 +415,32 @@ public class Shoot : MonoBehaviour
         {
             countdownText.text = " ";
         }
+
+        // Guardar estadísticas finales en la base de datos
+        if (PlayerDataManager.Instance != null)
+        {
+            PlayerDataManager.Instance.UpdateCurrentSessionStats(golesAtajados, golesAnotados);
+            Debug.Log("Estadísticas finales guardadas en la base de datos al detener el ciclo.");
+        }
     }
 
-    // Nueva función pública para obtener el número de goles
+    // Función pública para obtener el número de goles
     public int GetGolesAnotados()
     {
         return golesAnotados;
     }
 
-    // Nueva función pública para resetear los goles (por si la necesitas)
+    // Función pública para obtener el número de goles atajados
+    public int GetGolesAtajados()
+    {
+        return golesAtajados;
+    }
+
+    // Función pública para resetear los goles (por si la necesitas)
     public void ResetearGoles()
     {
         golesAnotados = 0;
-        Debug.Log("Contador de goles reseteado a 0");
+        golesAtajados = 0;
+        Debug.Log("Contadores de goles reseteados a 0");
     }
 }

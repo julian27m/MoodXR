@@ -6,7 +6,10 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: "Assets/Samples/Meta XR Interaction \u200BSDK/72.0.0/Example Scenes/Sadness.unity"
+    path: "Assets/Samples/Meta XR Interaction \u200BSDK/72.0.0/Example Scenes/Intro.unity"
+    guid: 1c6d529f41298e44e9630e341dce2e65
+  - enabled: 1
+    path: "Assets/Samples/Meta XR Interaction \u200BSDK/72.0.0/Example Scenes/Football.unity"
     guid: b1151c43d533a6c438999aa5743ca200
   - enabled: 0
     path: "Assets/Samples/Meta XR Interaction \u200BSDK/72.0.0/Example Scenes/UISetExamples.unity"
