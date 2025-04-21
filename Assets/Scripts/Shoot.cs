@@ -29,6 +29,9 @@ public class Shoot : MonoBehaviour
     [Tooltip("The position to respawn the ball at")]
     public Vector3 respawnPosition = new Vector3(0f, 0.258f, 11f);
 
+    [Tooltip("Posición donde se esconde la pelota cuando no está en uso")]
+    public Vector3 hidingPosition = new Vector3(0f, -100f, 0f);
+
     [Tooltip("Total number of shots before cycle ends")]
     public int totalShots = 5;
 
@@ -40,8 +43,16 @@ public class Shoot : MonoBehaviour
     [Tooltip("Tag used for the goal trigger")]
     public string goalTag = "Goal";
 
+    [Header("End Game UI")]
+    [Tooltip("Referencia al componente GameStatistics para mostrar resultados al final")]
+    public GameStatistics gameStatistics;
+
+    [Tooltip("Tiempo de espera en segundos después del último disparo antes de mostrar estadísticas")]
+    public float delayBeforeStats = 2f;
+
     // Reference to components
     private Rigidbody rb;
+    private MeshRenderer meshRenderer;
     private Vector3 currentTargetPoint;
     private bool shotInProgress = false;
     public int shotsFired = 0;
@@ -52,6 +63,12 @@ public class Shoot : MonoBehaviour
     private int golesAtajados = 0;
     // Flag para evitar contar goles múltiples veces en la misma jugada
     private bool goalScoredThisShot = false;
+
+    // Flag para evitar mostrar las estadísticas múltiples veces
+    private bool statsShown = false;
+
+    // Flag para indicar si la pelota está "visible" en juego
+    private bool ballVisible = true;
 
     // Debug variables to visualize the trajectory
     private Vector3 calculatedVelocity;
@@ -71,13 +88,25 @@ public class Shoot : MonoBehaviour
                 listeners[i].enabled = false;
             }
         }
+
         // Get the Rigidbody component
         rb = GetComponent<Rigidbody>();
-
         if (rb == null)
         {
             Debug.LogError("Rigidbody component not found! Please add a Rigidbody to this GameObject.");
             return;
+        }
+
+        // Get the MeshRenderer component (para ocultar la pelota visualmente)
+        meshRenderer = GetComponent<MeshRenderer>();
+        if (meshRenderer == null)
+        {
+            // Intentar encontrar en hijos
+            meshRenderer = GetComponentInChildren<MeshRenderer>();
+            if (meshRenderer == null)
+            {
+                Debug.LogWarning("MeshRenderer no encontrado en el objeto o sus hijos. No se podrá ocultar visualmente la pelota.");
+            }
         }
 
         // Check if countdown text is assigned
@@ -91,6 +120,18 @@ public class Shoot : MonoBehaviour
             countdownText.text = " ";
         }
 
+        // Check if game statistics is assigned
+        if (gameStatistics == null)
+        {
+            // Try to find it in the scene
+            gameStatistics = FindObjectOfType<GameStatistics>();
+
+            if (gameStatistics == null)
+            {
+                Debug.LogWarning("GameStatistics component is not assigned! Please assign it in the inspector.");
+            }
+        }
+
         // Make sure the Rigidbody has appropriate settings
         rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
@@ -100,6 +141,18 @@ public class Shoot : MonoBehaviour
         {
             respawnPosition = transform.position;
         }
+
+        // Inicializar el hiding position si no se especificó
+        if (hidingPosition == Vector3.zero)
+        {
+            hidingPosition = new Vector3(0, -100, 0); // Muy por debajo de la escena
+        }
+
+        // Inicializar el flag de estadísticas
+        statsShown = false;
+
+        // Asegurarnos que la pelota es visible al inicio
+        ShowBall();
 
         // Start the first shot
         StartCoroutine(ShootAfterDelay());
@@ -155,6 +208,62 @@ public class Shoot : MonoBehaviour
         // Draw respawn position
         Gizmos.color = Color.blue;
         Gizmos.DrawWireSphere(respawnPosition, 0.3f);
+
+        // Draw hiding position
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(hidingPosition, 0.3f);
+    }
+
+    // Método para ocultar visualmente la pelota (sin desactivar el GameObject)
+    private void HideBall()
+    {
+        if (!ballVisible) return; // Ya está oculta
+
+        ballVisible = false;
+
+        // Desactivar renderer para hacerla invisible
+        if (meshRenderer != null)
+        {
+            meshRenderer.enabled = false;
+        }
+
+        // Mover la pelota fuera de la vista y desactivar físicas
+        transform.position = hidingPosition;
+        rb.isKinematic = true;
+        rb.velocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+
+        // Desactivar colisiones
+        Collider ballCollider = GetComponent<Collider>();
+        if (ballCollider != null)
+        {
+            ballCollider.enabled = false;
+        }
+
+        Debug.Log("Pelota ocultada (sin desactivar GameObject)");
+    }
+
+    // Método para mostrar visualmente la pelota
+    private void ShowBall()
+    {
+        if (ballVisible) return; // Ya está visible
+
+        ballVisible = true;
+
+        // Activar renderer para hacerla visible
+        if (meshRenderer != null)
+        {
+            meshRenderer.enabled = true;
+        }
+
+        // Activar colisiones
+        Collider ballCollider = GetComponent<Collider>();
+        if (ballCollider != null)
+        {
+            ballCollider.enabled = true;
+        }
+
+        Debug.Log("Pelota mostrada");
     }
 
     // Método para detectar cuando la pelota atraviesa el trigger del gol
@@ -239,8 +348,36 @@ public class Shoot : MonoBehaviour
                 Debug.Log("Estadísticas finales guardadas en la base de datos.");
             }
 
-            // Desactivar la pelota
-            gameObject.SetActive(false);
+            // Ocultar la pelota (sin desactivar el GameObject)
+            HideBall();
+
+            // Mostrar estadísticas después de un breve delay (solo si no se han mostrado ya)
+            if (!statsShown)
+            {
+                statsShown = true;
+                StartCoroutine(ShowEndGameStatistics());
+                Debug.Log("Iniciando visualización de estadísticas finales...");
+            }
+        }
+    }
+
+    // Método para mostrar estadísticas al final del juego
+    IEnumerator ShowEndGameStatistics()
+    {
+        Debug.Log("Esperando " + delayBeforeStats + " segundos antes de mostrar estadísticas...");
+
+        // Esperar el tiempo configurado
+        yield return new WaitForSeconds(delayBeforeStats);
+
+        // Mostrar estadísticas si tenemos el componente
+        if (gameStatistics != null)
+        {
+            Debug.Log("Mostrando estadísticas finales: " + golesAtajados + " goles atajados, " + golesAnotados + " goles recibidos");
+            gameStatistics.ShowEndGameStatistics(golesAtajados, golesAnotados);
+        }
+        else
+        {
+            Debug.LogError("No se pudo mostrar estadísticas. El componente GameStatistics no está asignado.");
         }
     }
 
@@ -250,6 +387,9 @@ public class Shoot : MonoBehaviour
         rb.velocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
         rb.isKinematic = true;
+
+        // Asegurarse que la pelota esté visible
+        ShowBall();
 
         // Move to respawn position
         transform.position = respawnPosition;
@@ -393,6 +533,13 @@ public class Shoot : MonoBehaviour
         cycleActive = true;
         golesAnotados = 0;
         golesAtajados = 0;
+        statsShown = false; // Reiniciar el flag de estadísticas
+
+        // Ocultar diálogos de estadísticas si están visibles
+        if (gameStatistics != null)
+        {
+            gameStatistics.HideAllDialogs();
+        }
 
         // Clear the countdown text
         if (countdownText != null)
@@ -421,6 +568,18 @@ public class Shoot : MonoBehaviour
         {
             PlayerDataManager.Instance.UpdateCurrentSessionStats(golesAtajados, golesAnotados);
             Debug.Log("Estadísticas finales guardadas en la base de datos al detener el ciclo.");
+        }
+
+        // Ocultar la pelota (sin desactivar el GameObject)
+        HideBall();
+
+        // CORREGIDO: Asegurarse de mostrar estadísticas solo una vez
+        if (!statsShown)
+        {
+            statsShown = true;
+            // Mostrar estadísticas después de un breve delay
+            StartCoroutine(ShowEndGameStatistics());
+            Debug.Log("Iniciando visualización de estadísticas finales tras detener el ciclo...");
         }
     }
 
