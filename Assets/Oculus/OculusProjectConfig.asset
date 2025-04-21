@@ -15,7 +15,7 @@ MonoBehaviour:
   targetDeviceTypes: 02000000030000000400000005000000
   allowOptional3DofHeadTracking: 0
   handTrackingSupport: 1
-  handTrackingFrequency: 2
+  handTrackingFrequency: 0
   handTrackingVersion: 2
   anchorSupport: 1
   sharedAnchorSupport: 0
@@ -35,7 +35,7 @@ MonoBehaviour:
   enableIL2CPPLTO: 0
   removeGradleManifest: 1
   focusAware: 1
-  requiresSystemKeyboard: 1
+  requiresSystemKeyboard: 0
   experimentalFeaturesEnabled: 0
   insightPassthroughEnabled: 0
   _insightPassthroughSupport: 1

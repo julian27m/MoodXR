@@ -12,9 +12,6 @@ public class Shoot : MonoBehaviour
     [Tooltip("Delay in seconds before shooting after spawning")]
     public float shootDelay = 5f;
 
-    [Tooltip("Tiempo fijo en segundos antes de que la pelota desaparezca tras ser lanzada")]
-    public float fixedDisappearDelay = 5f;
-
     [Header("Target Area Settings")]
     [Tooltip("The minimum bounds of the target area")]
     public Vector3 targetAreaMin = new Vector3(-3.48f, 0.261f, 0f);
@@ -25,57 +22,30 @@ public class Shoot : MonoBehaviour
     [Tooltip("If true, draws the target area as a wireframe in the editor")]
     public bool showTargetArea = true;
 
+    [Header("Collision Settings")]
+    [Tooltip("Tag of objects that will trigger the disappearance countdown")]
+    public string collisionTag = "Collider";
+
+    [Tooltip("Time in seconds before ball disappears after collision")]
+    public float disappearDelay = 5f;
+
     [Header("Respawn Settings")]
     [Tooltip("The position to respawn the ball at")]
     public Vector3 respawnPosition = new Vector3(0f, 0.258f, 11f);
 
-    [Tooltip("Posición donde se esconde la pelota cuando no está en uso")]
-    public Vector3 hidingPosition = new Vector3(0f, -100f, 0f);
-
     [Tooltip("Total number of shots before cycle ends")]
-    public int totalShots = 5;
+    public int totalShots = 3;
 
     [Header("UI References")]
     [Tooltip("Reference to the TextMeshPro component that will display the countdown")]
     public TextMeshProUGUI countdownText;
 
-    [Header("Goal Settings")]
-    [Tooltip("Tag used for the goal trigger")]
-    public string goalTag = "Goal";
-
-    [Header("End Game Settings")]
-    [Tooltip("Tiempo de espera en segundos antes de cargar la escena de estadísticas")]
-    public float delayBeforeStats = 2f;
-
-    [Header("Diálogo Final")]
-    [Tooltip("GameObject con el diálogo que aparece al terminar la partida")]
-    public GameObject DialogoFinalPartida;
-
-    [Tooltip("Tiempo de espera en segundos para mostrar el diálogo antes de cargar estadísticas")]
-    public float tiempoMostrarDialogo = 5f;
-
     // Reference to components
     private Rigidbody rb;
-    private MeshRenderer meshRenderer;
     private Vector3 currentTargetPoint;
-    private bool shotInProgress = false;
-    public int shotsFired = 0;
+    private bool hasCollided = false;
+    private int shotsFired = 0;
     private bool cycleActive = true;
-
-    // Conteo de goles
-    private int golesAnotados = 0;
-    private int golesAtajados = 0;
-    // Flag para evitar contar goles múltiples veces en la misma jugada
-    private bool goalScoredThisShot = false;
-
-    // Flag para evitar mostrar las estadísticas múltiples veces
-    private bool statsShown = false;
-
-    // Flag para controlar si el diálogo ya se mostró
-    private bool dialogoMostrado = false;
-
-    // Flag para indicar si la pelota está "visible" en juego
-    private bool ballVisible = true;
 
     // Debug variables to visualize the trajectory
     private Vector3 calculatedVelocity;
@@ -95,25 +65,13 @@ public class Shoot : MonoBehaviour
                 listeners[i].enabled = false;
             }
         }
-
         // Get the Rigidbody component
         rb = GetComponent<Rigidbody>();
+
         if (rb == null)
         {
             Debug.LogError("Rigidbody component not found! Please add a Rigidbody to this GameObject.");
             return;
-        }
-
-        // Get the MeshRenderer component (para ocultar la pelota visualmente)
-        meshRenderer = GetComponent<MeshRenderer>();
-        if (meshRenderer == null)
-        {
-            // Intentar encontrar en hijos
-            meshRenderer = GetComponentInChildren<MeshRenderer>();
-            if (meshRenderer == null)
-            {
-                Debug.LogWarning("MeshRenderer no encontrado en el objeto o sus hijos. No se podrá ocultar visualmente la pelota.");
-            }
         }
 
         // Check if countdown text is assigned
@@ -127,17 +85,6 @@ public class Shoot : MonoBehaviour
             countdownText.text = " ";
         }
 
-        // Verificar si el diálogo final está asignado
-        if (DialogoFinalPartida == null)
-        {
-            Debug.LogWarning("DialogoFinalPartida no está asignado. Asígnalo en el inspector.");
-        }
-        else
-        {
-            // Desactivar el diálogo al inicio
-            DialogoFinalPartida.SetActive(false);
-        }
-
         // Make sure the Rigidbody has appropriate settings
         rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
@@ -147,19 +94,6 @@ public class Shoot : MonoBehaviour
         {
             respawnPosition = transform.position;
         }
-
-        // Inicializar el hiding position si no se especificó
-        if (hidingPosition == Vector3.zero)
-        {
-            hidingPosition = new Vector3(0, -100, 0); // Muy por debajo de la escena
-        }
-
-        // Inicializar flags
-        statsShown = false;
-        dialogoMostrado = false;
-
-        // Asegurarnos que la pelota es visible al inicio
-        ShowBall();
 
         // Start the first shot
         StartCoroutine(ShootAfterDelay());
@@ -215,242 +149,37 @@ public class Shoot : MonoBehaviour
         // Draw respawn position
         Gizmos.color = Color.blue;
         Gizmos.DrawWireSphere(respawnPosition, 0.3f);
-
-        // Draw hiding position
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(hidingPosition, 0.3f);
-    }
-
-    // Método para ocultar visualmente la pelota (sin desactivar el GameObject)
-    private void HideBall()
-    {
-        if (!ballVisible) return; // Ya está oculta
-
-        ballVisible = false;
-
-        // Desactivar renderer para hacerla invisible
-        if (meshRenderer != null)
-        {
-            meshRenderer.enabled = false;
-        }
-
-        // Mover la pelota fuera de la vista y desactivar físicas
-        transform.position = hidingPosition;
-        rb.isKinematic = true;
-        rb.velocity = Vector3.zero;
-        rb.angularVelocity = Vector3.zero;
-
-        // Desactivar colisiones
-        Collider ballCollider = GetComponent<Collider>();
-        if (ballCollider != null)
-        {
-            ballCollider.enabled = false;
-        }
-
-        Debug.Log("Pelota ocultada (sin desactivar GameObject)");
-    }
-
-    // Método para mostrar visualmente la pelota
-    private void ShowBall()
-    {
-        if (ballVisible) return; // Ya está visible
-
-        ballVisible = true;
-
-        // Activar renderer para hacerla visible
-        if (meshRenderer != null)
-        {
-            meshRenderer.enabled = true;
-        }
-
-        // Activar colisiones
-        Collider ballCollider = GetComponent<Collider>();
-        if (ballCollider != null)
-        {
-            ballCollider.enabled = true;
-        }
-
-        Debug.Log("Pelota mostrada");
     }
 
     void OnCollisionEnter(Collision collision)
     {
-        // Detectar colisión con las manos
-        if (!goalScoredThisShot && collision.gameObject.CompareTag("hands"))
+        // Check if we collided with an object with the specified tag
+        if (!hasCollided && collision.gameObject.CompareTag(collisionTag))
         {
-            Debug.Log("¡Balón tocó las manos del arquero!");
+            Debug.Log("Ball collided with an object tagged: " + collisionTag);
+            hasCollided = true;
 
-            // Reproducir sonido de atajada
-            if (FootballAudioManager.Instance != null)
-            {
-                FootballAudioManager.Instance.PlaySaveSound();
-            }
+            // Start disappear countdown
+            StartCoroutine(DisappearAfterDelay());
         }
     }
 
-    // Método para detectar cuando la pelota atraviesa el trigger del gol
-    void OnTriggerEnter(Collider other)
+    IEnumerator DisappearAfterDelay()
     {
-        // Verificar si atravesó el collider con tag "Goal" y que no haya anotado gol en este tiro aún
-        if (!goalScoredThisShot && other.CompareTag(goalTag))
-        {
-            // Incrementar contador de goles
-            golesAnotados++;
-            goalScoredThisShot = true;
+        Debug.Log("Ball will disappear in " + disappearDelay + " seconds...");
 
-            if (FootballAudioManager.Instance != null)
-            {
-                FootballAudioManager.Instance.PlayGoalSound();
-            }
+        // Wait for the specified delay
+        yield return new WaitForSeconds(disappearDelay);
 
-            // Incrementar goles recibidos en la base de datos
-            if (PlayerDataManager.Instance != null)
-            {
-                PlayerDataManager.Instance.IncrementGolesRecibidos();
-                Debug.Log("Gol registrado en la base de datos para el jugador: " +
-                         PlayerDataManager.Instance.GetCurrentPlayerName());
-            }
-            else
-            {
-                Debug.LogWarning("PlayerDataManager no encontrado. No se pudo registrar el gol en la base de datos.");
-            }
-
-            // Mostrar mensaje en debug log
-            Debug.Log("¡GOL DEL USUARIO! El usuario lleva " + golesAnotados + " goles");
-        }
-
-        // Cuando se detecta un golpe en el poste:
-        if (!goalScoredThisShot && other.CompareTag("poste"))
-        {
-            Debug.Log("¡Balón golpeó el poste!");
-
-            // Reproducir sonido de poste
-            if (FootballAudioManager.Instance != null)
-            {
-                FootballAudioManager.Instance.PlayPostSound();
-            }
-        }
-    }
-
-    // Método para registrar gol atajado
-    private void RegisterGoalSaved()
-    {
-        if (!goalScoredThisShot)
-        {
-            golesAtajados++;
-
-            if (FootballAudioManager.Instance != null)
-            {
-                FootballAudioManager.Instance.PlaySaveSound();
-            }
-
-            // Incrementar goles atajados en la base de datos
-            if (PlayerDataManager.Instance != null)
-            {
-                PlayerDataManager.Instance.IncrementGolesAtajados();
-                Debug.Log("Gol atajado registrado en la base de datos para el jugador: " +
-                         PlayerDataManager.Instance.GetCurrentPlayerName());
-            }
-            else
-            {
-                Debug.LogWarning("PlayerDataManager no encontrado. No se pudo registrar el gol atajado en la base de datos.");
-            }
-
-            Debug.Log("¡GOL ATAJADO! El usuario lleva " + golesAtajados + " goles atajados");
-        }
-    }
-
-    // Método para desaparecer la pelota después de un tiempo fijo tras el lanzamiento
-    IEnumerator DisappearAfterFixedDelay()
-    {
-        // Esperar el tiempo fijo
-        yield return new WaitForSeconds(fixedDisappearDelay);
-
-        // Verificar si ha marcado un gol, si no ha marcado, se considera atajado
-        if (!goalScoredThisShot)
-        {
-            RegisterGoalSaved();
-        }
-
-        // Si no hemos llegado al límite de tiros, respawnear
+        // If we haven't reached the total shots limit, respawn
         if (shotsFired < totalShots && cycleActive)
         {
-            yield return new WaitForSeconds(0.5f); // Breve pausa antes de respawnear
+            yield return new WaitForSeconds(0.5f); // Brief pause before respawning
             Respawn();
         }
         else
         {
-            // Ciclo completado
-            Debug.Log("Ciclo completo. Total tiros: " + shotsFired +
-                      ", Goles recibidos: " + golesAnotados +
-                      ", Goles atajados: " + golesAtajados);
-
-            // Ocultar la pelota (sin desactivar el GameObject)
-            HideBall();
-
-            // Mostrar el diálogo final y luego cargar estadísticas
-            MostrarDialogoFinal();
-        }
-    }
-
-    // Método para mostrar el diálogo final y programar la carga de estadísticas
-    private void MostrarDialogoFinal()
-    {
-        // Si ya se mostró el diálogo o se están mostrando las estadísticas, salir
-        if (dialogoMostrado || statsShown) return;
-
-        dialogoMostrado = true;
-
-        // Activar el diálogo
-        if (DialogoFinalPartida != null)
-        {
-            DialogoFinalPartida.SetActive(true);
-            Debug.Log("Diálogo de finalización de partida activado");
-
-            // Programar la carga de estadísticas después del tiempo especificado
-            StartCoroutine(LoadStatsAfterDialog());
-        }
-        else
-        {
-            Debug.LogWarning("DialogoFinalPartida no está asignado. Cargando directamente las estadísticas.");
-            // Cargar directamente las estadísticas si no hay diálogo
-            StartCoroutine(LoadStatsScene());
-        }
-    }
-
-    // Método para cargar estadísticas después del diálogo
-    IEnumerator LoadStatsAfterDialog()
-    {
-        Debug.Log("Esperando " + tiempoMostrarDialogo + " segundos antes de cargar las estadísticas...");
-
-        // Esperar el tiempo configurado para el diálogo
-        yield return new WaitForSeconds(tiempoMostrarDialogo);
-
-        // Cargar la escena de estadísticas
-        if (!statsShown)
-        {
-            statsShown = true;
-            StartCoroutine(LoadStatsScene());
-        }
-    }
-
-    // Método para cargar la escena de estadísticas
-    IEnumerator LoadStatsScene()
-    {
-        Debug.Log("Esperando " + delayBeforeStats + " segundos antes de cargar escena de estadísticas...");
-
-        // Esperar el tiempo configurado
-        yield return new WaitForSeconds(delayBeforeStats);
-
-        // Cargar la escena de estadísticas
-        if (GameController.Instance != null)
-        {
-            Debug.Log("Cargando escena de estadísticas con: " + golesAtajados + " goles atajados, " + golesAnotados + " goles recibidos");
-            GameController.Instance.LoadStatsRankingScene(golesAtajados, golesAnotados);
-        }
-        else
-        {
-            Debug.LogError("No se pudo cargar la escena de estadísticas. GameController no encontrado.");
+            Debug.Log("Cycle complete. Total shots: " + shotsFired);
         }
     }
 
@@ -461,16 +190,12 @@ public class Shoot : MonoBehaviour
         rb.angularVelocity = Vector3.zero;
         rb.isKinematic = true;
 
-        // Asegurarse que la pelota esté visible
-        ShowBall();
-
         // Move to respawn position
         transform.position = respawnPosition;
         transform.rotation = Quaternion.identity;
 
         // Reset collision state
-        shotInProgress = false;
-        goalScoredThisShot = false;
+        hasCollided = false;
 
         Debug.Log("Ball respawned at " + respawnPosition);
 
@@ -484,12 +209,6 @@ public class Shoot : MonoBehaviour
 
         // Generate a random target point
         GenerateTargetPoint();
-
-        // Restaurar volumen estándar al iniciar cuenta regresiva
-        if (FootballAudioManager.Instance != null)
-        {
-            FootballAudioManager.Instance.RestoreStandardCrowdVolume();
-        }
 
         // Wait for the specified delay with countdown
         for (int i = (int)shootDelay; i > 0; i--)
@@ -513,7 +232,6 @@ public class Shoot : MonoBehaviour
 
         // Increment shot counter
         shotsFired++;
-        shotInProgress = true;
 
         // Shoot the ball
         Debug.Log("Shooting ball now! (Shot " + shotsFired + " of " + totalShots + ")");
@@ -531,18 +249,10 @@ public class Shoot : MonoBehaviour
         rb.velocity = scaledVelocity;
         calculatedVelocity = scaledVelocity; // For debugging visualization
 
-        if (FootballAudioManager.Instance != null)
-        {
-            FootballAudioManager.Instance.PlayKickSound();
-        }
-
         Debug.Log("Applied initial velocity: " + scaledVelocity + " with magnitude: " + scaledVelocity.magnitude);
         Debug.Log("Time scale: " + timeScale + " (higher = slower ball)");
         Debug.Log("Estimated time to target: " + (CalculateBaseTime() * timeScale) + " seconds");
         Debug.Log("Ball shot towards target: " + currentTargetPoint);
-
-        // Iniciar el temporizador para que la pelota desaparezca después de un tiempo fijo
-        StartCoroutine(DisappearAfterFixedDelay());
     }
 
     void GenerateTargetPoint()
@@ -612,19 +322,8 @@ public class Shoot : MonoBehaviour
 
         // Reset state
         shotsFired = 0;
-        shotInProgress = false;
-        goalScoredThisShot = false;
+        hasCollided = false;
         cycleActive = true;
-        golesAnotados = 0;
-        golesAtajados = 0;
-        statsShown = false; // Reiniciar el flag de estadísticas
-        dialogoMostrado = false; // Reiniciar el flag de diálogo mostrado
-
-        // Ocultar el diálogo si está visible
-        if (DialogoFinalPartida != null)
-        {
-            DialogoFinalPartida.SetActive(false);
-        }
 
         // Clear the countdown text
         if (countdownText != null)
@@ -647,31 +346,5 @@ public class Shoot : MonoBehaviour
         {
             countdownText.text = " ";
         }
-
-        // Ocultar la pelota (sin desactivar el GameObject)
-        HideBall();
-
-        // Mostrar el diálogo final y programar la carga de estadísticas
-        MostrarDialogoFinal();
-    }
-
-    // Función pública para obtener el número de goles
-    public int GetGolesAnotados()
-    {
-        return golesAnotados;
-    }
-
-    // Función pública para obtener el número de goles atajados
-    public int GetGolesAtajados()
-    {
-        return golesAtajados;
-    }
-
-    // Función pública para resetear los goles (por si la necesitas)
-    public void ResetearGoles()
-    {
-        golesAnotados = 0;
-        golesAtajados = 0;
-        Debug.Log("Contadores de goles reseteados a 0");
     }
 }
