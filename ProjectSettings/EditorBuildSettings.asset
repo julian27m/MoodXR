@@ -9,6 +9,9 @@ EditorBuildSettings:
     path: "Assets/Samples/Meta XR Interaction \u200BSDK/72.0.0/Example Scenes/Intro.unity"
     guid: 1c6d529f41298e44e9630e341dce2e65
   - enabled: 1
+    path: "Assets/Samples/Meta XR Interaction \u200BSDK/72.0.0/Example Scenes/Tutorial.unity"
+    guid: 73a4d90d5792f564b8e5b39b3b992840
+  - enabled: 1
     path: "Assets/Samples/Meta XR Interaction \u200BSDK/72.0.0/Example Scenes/Football.unity"
     guid: b1151c43d533a6c438999aa5743ca200
   - enabled: 1

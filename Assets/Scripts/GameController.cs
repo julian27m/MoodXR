@@ -15,6 +15,9 @@ public class GameController : MonoBehaviour
     [Tooltip("Nombre de la escena que muestra estadísticas y ranking")]
     public string statsRankingSceneName = "StatsRanking";
 
+    [Tooltip("Nombre de la escena tutorial")]
+    public string tutorialSceneName = "TutorialScene";
+
     // Para almacenar temporalmente los resultados de la última partida
     private int lastSessionGolesAtajados = 0;
     private int lastSessionGolesRecibidos = 0;
@@ -22,6 +25,7 @@ public class GameController : MonoBehaviour
     // Estado del juego
     private bool isTransitioningToGame = false;
     private bool isTransitioningToStats = false;
+    private bool isTransitioningToTutorial = false;
 
     private void Awake()
     {
@@ -51,6 +55,8 @@ public class GameController : MonoBehaviour
     // Este método se llama automáticamente cuando se carga una escena
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        Debug.Log("Escena cargada: " + scene.name);
+
         // Si estamos cargando la escena del juego
         if (scene.name == gameSceneName && isTransitioningToGame)
         {
@@ -85,6 +91,26 @@ public class GameController : MonoBehaviour
                 Debug.LogError("No se encontró el componente Shoot en la escena del juego");
             }
         }
+        // Si estamos cargando la escena de tutorial
+        else if (scene.name == tutorialSceneName && isTransitioningToTutorial)
+        {
+            isTransitioningToTutorial = false;
+
+            // Buscar el componente TutorialShoot en la escena
+            TutorialShoot tutorialShootComponent = FindObjectOfType<TutorialShoot>();
+
+            if (tutorialShootComponent != null)
+            {
+                Debug.Log("Componente TutorialShoot encontrado en la escena tutorial");
+
+                // Iniciar el tutorial (en caso de que no se haya iniciado automáticamente)
+                tutorialShootComponent.RestartCycle();
+            }
+            else
+            {
+                Debug.LogError("No se encontró el componente TutorialShoot en la escena tutorial");
+            }
+        }
         // Si estamos cargando la escena de estadísticas
         else if (scene.name == statsRankingSceneName && isTransitioningToStats)
         {
@@ -107,7 +133,7 @@ public class GameController : MonoBehaviour
         }
     }
 
-    // Método para cargar la escena del juego desde el registro (tras crear/seleccionar un jugador)
+    // Método para cargar la escena del juego principal
     public void LoadGameScene()
     {
         if (PlayerDataManager.Instance == null ||
@@ -118,12 +144,29 @@ public class GameController : MonoBehaviour
         }
 
         isTransitioningToGame = true;
+        Debug.Log("Cargando escena del juego principal: " + gameSceneName);
         SceneManager.LoadScene(gameSceneName);
+    }
+
+    // Método para cargar la escena de tutorial
+    public void LoadTutorialScene()
+    {
+        if (PlayerDataManager.Instance == null ||
+            PlayerDataManager.Instance.GetCurrentPlayer() == null)
+        {
+            Debug.LogError("Se intentó cargar la escena tutorial sin un jugador activo");
+            return;
+        }
+
+        isTransitioningToTutorial = true;
+        Debug.Log("Cargando escena tutorial: " + tutorialSceneName);
+        SceneManager.LoadScene(tutorialSceneName);
     }
 
     // Método para cargar la escena de registro
     public void LoadRegistrationScene()
     {
+        Debug.Log("Cargando escena de registro: " + registrationSceneName);
         SceneManager.LoadScene(registrationSceneName);
     }
 
@@ -142,6 +185,7 @@ public class GameController : MonoBehaviour
         }
 
         isTransitioningToStats = true;
+        Debug.Log("Cargando escena de estadísticas: " + statsRankingSceneName);
         SceneManager.LoadScene(statsRankingSceneName);
     }
 

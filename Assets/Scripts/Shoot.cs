@@ -47,6 +47,13 @@ public class Shoot : MonoBehaviour
     [Tooltip("Tiempo de espera en segundos antes de cargar la escena de estadísticas")]
     public float delayBeforeStats = 2f;
 
+    [Header("Diálogo Final")]
+    [Tooltip("GameObject con el diálogo que aparece al terminar la partida")]
+    public GameObject DialogoFinalPartida;
+
+    [Tooltip("Tiempo de espera en segundos para mostrar el diálogo antes de cargar estadísticas")]
+    public float tiempoMostrarDialogo = 5f;
+
     // Reference to components
     private Rigidbody rb;
     private MeshRenderer meshRenderer;
@@ -63,6 +70,9 @@ public class Shoot : MonoBehaviour
 
     // Flag para evitar mostrar las estadísticas múltiples veces
     private bool statsShown = false;
+
+    // Flag para controlar si el diálogo ya se mostró
+    private bool dialogoMostrado = false;
 
     // Flag para indicar si la pelota está "visible" en juego
     private bool ballVisible = true;
@@ -117,6 +127,17 @@ public class Shoot : MonoBehaviour
             countdownText.text = " ";
         }
 
+        // Verificar si el diálogo final está asignado
+        if (DialogoFinalPartida == null)
+        {
+            Debug.LogWarning("DialogoFinalPartida no está asignado. Asígnalo en el inspector.");
+        }
+        else
+        {
+            // Desactivar el diálogo al inicio
+            DialogoFinalPartida.SetActive(false);
+        }
+
         // Make sure the Rigidbody has appropriate settings
         rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
@@ -133,8 +154,9 @@ public class Shoot : MonoBehaviour
             hidingPosition = new Vector3(0, -100, 0); // Muy por debajo de la escena
         }
 
-        // Inicializar el flag de estadísticas
+        // Inicializar flags
         statsShown = false;
+        dialogoMostrado = false;
 
         // Asegurarnos que la pelota es visible al inicio
         ShowBall();
@@ -251,6 +273,21 @@ public class Shoot : MonoBehaviour
         Debug.Log("Pelota mostrada");
     }
 
+    void OnCollisionEnter(Collision collision)
+    {
+        // Detectar colisión con las manos
+        if (!goalScoredThisShot && collision.gameObject.CompareTag("hands"))
+        {
+            Debug.Log("¡Balón tocó las manos del arquero!");
+
+            // Reproducir sonido de atajada
+            if (FootballAudioManager.Instance != null)
+            {
+                FootballAudioManager.Instance.PlaySaveSound();
+            }
+        }
+    }
+
     // Método para detectar cuando la pelota atraviesa el trigger del gol
     void OnTriggerEnter(Collider other)
     {
@@ -260,6 +297,11 @@ public class Shoot : MonoBehaviour
             // Incrementar contador de goles
             golesAnotados++;
             goalScoredThisShot = true;
+
+            if (FootballAudioManager.Instance != null)
+            {
+                FootballAudioManager.Instance.PlayGoalSound();
+            }
 
             // Incrementar goles recibidos en la base de datos
             if (PlayerDataManager.Instance != null)
@@ -276,6 +318,18 @@ public class Shoot : MonoBehaviour
             // Mostrar mensaje en debug log
             Debug.Log("¡GOL DEL USUARIO! El usuario lleva " + golesAnotados + " goles");
         }
+
+        // Cuando se detecta un golpe en el poste:
+        if (!goalScoredThisShot && other.CompareTag("poste"))
+        {
+            Debug.Log("¡Balón golpeó el poste!");
+
+            // Reproducir sonido de poste
+            if (FootballAudioManager.Instance != null)
+            {
+                FootballAudioManager.Instance.PlayPostSound();
+            }
+        }
     }
 
     // Método para registrar gol atajado
@@ -284,6 +338,11 @@ public class Shoot : MonoBehaviour
         if (!goalScoredThisShot)
         {
             golesAtajados++;
+
+            if (FootballAudioManager.Instance != null)
+            {
+                FootballAudioManager.Instance.PlaySaveSound();
+            }
 
             // Incrementar goles atajados en la base de datos
             if (PlayerDataManager.Instance != null)
@@ -329,13 +388,49 @@ public class Shoot : MonoBehaviour
             // Ocultar la pelota (sin desactivar el GameObject)
             HideBall();
 
-            // Cargar la escena de estadísticas después de un breve delay (solo si no se han mostrado ya)
-            if (!statsShown)
-            {
-                statsShown = true;
-                StartCoroutine(LoadStatsScene());
-                Debug.Log("Iniciando carga de la escena de estadísticas...");
-            }
+            // Mostrar el diálogo final y luego cargar estadísticas
+            MostrarDialogoFinal();
+        }
+    }
+
+    // Método para mostrar el diálogo final y programar la carga de estadísticas
+    private void MostrarDialogoFinal()
+    {
+        // Si ya se mostró el diálogo o se están mostrando las estadísticas, salir
+        if (dialogoMostrado || statsShown) return;
+
+        dialogoMostrado = true;
+
+        // Activar el diálogo
+        if (DialogoFinalPartida != null)
+        {
+            DialogoFinalPartida.SetActive(true);
+            Debug.Log("Diálogo de finalización de partida activado");
+
+            // Programar la carga de estadísticas después del tiempo especificado
+            StartCoroutine(LoadStatsAfterDialog());
+        }
+        else
+        {
+            Debug.LogWarning("DialogoFinalPartida no está asignado. Cargando directamente las estadísticas.");
+            // Cargar directamente las estadísticas si no hay diálogo
+            StartCoroutine(LoadStatsScene());
+        }
+    }
+
+    // Método para cargar estadísticas después del diálogo
+    IEnumerator LoadStatsAfterDialog()
+    {
+        Debug.Log("Esperando " + tiempoMostrarDialogo + " segundos antes de cargar las estadísticas...");
+
+        // Esperar el tiempo configurado para el diálogo
+        yield return new WaitForSeconds(tiempoMostrarDialogo);
+
+        // Cargar la escena de estadísticas
+        if (!statsShown)
+        {
+            statsShown = true;
+            StartCoroutine(LoadStatsScene());
         }
     }
 
@@ -390,6 +485,12 @@ public class Shoot : MonoBehaviour
         // Generate a random target point
         GenerateTargetPoint();
 
+        // Restaurar volumen estándar al iniciar cuenta regresiva
+        if (FootballAudioManager.Instance != null)
+        {
+            FootballAudioManager.Instance.RestoreStandardCrowdVolume();
+        }
+
         // Wait for the specified delay with countdown
         for (int i = (int)shootDelay; i > 0; i--)
         {
@@ -429,6 +530,11 @@ public class Shoot : MonoBehaviour
         // Apply the velocity to the ball
         rb.velocity = scaledVelocity;
         calculatedVelocity = scaledVelocity; // For debugging visualization
+
+        if (FootballAudioManager.Instance != null)
+        {
+            FootballAudioManager.Instance.PlayKickSound();
+        }
 
         Debug.Log("Applied initial velocity: " + scaledVelocity + " with magnitude: " + scaledVelocity.magnitude);
         Debug.Log("Time scale: " + timeScale + " (higher = slower ball)");
@@ -512,6 +618,13 @@ public class Shoot : MonoBehaviour
         golesAnotados = 0;
         golesAtajados = 0;
         statsShown = false; // Reiniciar el flag de estadísticas
+        dialogoMostrado = false; // Reiniciar el flag de diálogo mostrado
+
+        // Ocultar el diálogo si está visible
+        if (DialogoFinalPartida != null)
+        {
+            DialogoFinalPartida.SetActive(false);
+        }
 
         // Clear the countdown text
         if (countdownText != null)
@@ -538,14 +651,8 @@ public class Shoot : MonoBehaviour
         // Ocultar la pelota (sin desactivar el GameObject)
         HideBall();
 
-        // CORREGIDO: Asegurarse de mostrar estadísticas solo una vez
-        if (!statsShown)
-        {
-            statsShown = true;
-            // Cargar la escena de estadísticas después de un breve delay
-            StartCoroutine(LoadStatsScene());
-            Debug.Log("Iniciando carga de escena de estadísticas tras detener el ciclo...");
-        }
+        // Mostrar el diálogo final y programar la carga de estadísticas
+        MostrarDialogoFinal();
     }
 
     // Función pública para obtener el número de goles

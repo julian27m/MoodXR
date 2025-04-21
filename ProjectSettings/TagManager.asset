@@ -39,6 +39,9 @@ TagManager:
   - ColliderSur
   - ColliderEste
   - ColliderOeste
+  - Goal
+  - hands
+  - poste
   layers:
   - Default
   - TransparentFX

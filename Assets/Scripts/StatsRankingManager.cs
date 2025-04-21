@@ -24,8 +24,12 @@ public class StatsRankingManager : MonoBehaviour
     public TextMeshProUGUI golesRecibidosText;
 
     [Header("Textos de Ranking")]
-    [Tooltip("Array de TextMeshPro para mostrar los 5 mejores jugadores")]
+    [Tooltip("Array de TextMeshPro para mostrar los 10 mejores jugadores")]
     public TextMeshProUGUI[] rankingTexts;
+
+    [Header("Configuración de Ranking")]
+    [Tooltip("Número de mejores partidas a mostrar")]
+    public int numeroMejoresPartidas = 10;
 
     // Datos de la partida actual
     private int currentGolesAtajados = 0;
@@ -71,9 +75,10 @@ public class StatsRankingManager : MonoBehaviour
             Debug.LogError("Falta referencia al texto de goles recibidos");
         }
 
-        if (rankingTexts == null || rankingTexts.Length < 5)
+        if (rankingTexts == null || rankingTexts.Length < numeroMejoresPartidas)
         {
-            Debug.LogError("No hay suficientes campos de texto para el ranking (se necesitan 5)");
+            Debug.LogWarning($"No hay suficientes campos de texto para el ranking (se necesitan {numeroMejoresPartidas}). " +
+                           $"Sólo se mostrarán {rankingTexts.Length} posiciones.");
         }
     }
 
@@ -153,18 +158,22 @@ public class StatsRankingManager : MonoBehaviour
             return;
         }
 
-        // Obtener las 5 mejores sesiones, filtrando duplicados
-        var topSessions = RankingManager.Instance.GetTopSessionsFiltered(5);
+        // Obtener las mejores sesiones, filtrando duplicados
+        var topSessions = RankingManager.Instance.GetTopSessionsFiltered(numeroMejoresPartidas);
+        Debug.Log($"Se obtuvieron {topSessions.Count} mejores partidas para mostrar en el ranking");
+
+        // Número real de textos a mostrar (el mínimo entre el número deseado y los disponibles)
+        int textsToPopulate = Mathf.Min(rankingTexts.Length, numeroMejoresPartidas);
 
         // Llenar los textos del ranking
         for (int i = 0; i < rankingTexts.Length; i++)
         {
             if (rankingTexts[i] != null)
             {
-                if (i < topSessions.Count)
+                if (i < topSessions.Count && i < textsToPopulate)
                 {
                     // Mostrar el jugador y sus atajadas
-                    rankingTexts[i].text = $"{topSessions[i].PlayerName}: {topSessions[i].GolesAtajados} atajadas";
+                    rankingTexts[i].text = $"{i + 1}. {topSessions[i].PlayerName}: {topSessions[i].GolesAtajados} atajadas";
                     rankingTexts[i].gameObject.SetActive(true); // Activar el texto
                 }
                 else
