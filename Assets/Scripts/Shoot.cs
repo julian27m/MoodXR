@@ -43,11 +43,8 @@ public class Shoot : MonoBehaviour
     [Tooltip("Tag used for the goal trigger")]
     public string goalTag = "Goal";
 
-    [Header("End Game UI")]
-    [Tooltip("Referencia al componente GameStatistics para mostrar resultados al final")]
-    public GameStatistics gameStatistics;
-
-    [Tooltip("Tiempo de espera en segundos después del último disparo antes de mostrar estadísticas")]
+    [Header("End Game Settings")]
+    [Tooltip("Tiempo de espera en segundos antes de cargar la escena de estadísticas")]
     public float delayBeforeStats = 2f;
 
     // Reference to components
@@ -118,18 +115,6 @@ public class Shoot : MonoBehaviour
         {
             // Clear the text initially
             countdownText.text = " ";
-        }
-
-        // Check if game statistics is assigned
-        if (gameStatistics == null)
-        {
-            // Try to find it in the scene
-            gameStatistics = FindObjectOfType<GameStatistics>();
-
-            if (gameStatistics == null)
-            {
-                Debug.LogWarning("GameStatistics component is not assigned! Please assign it in the inspector.");
-            }
         }
 
         // Make sure the Rigidbody has appropriate settings
@@ -341,43 +326,36 @@ public class Shoot : MonoBehaviour
                       ", Goles recibidos: " + golesAnotados +
                       ", Goles atajados: " + golesAtajados);
 
-            // Guardar estadísticas finales en la base de datos
-            if (PlayerDataManager.Instance != null)
-            {
-                PlayerDataManager.Instance.UpdateCurrentSessionStats(golesAtajados, golesAnotados);
-                Debug.Log("Estadísticas finales guardadas en la base de datos.");
-            }
-
             // Ocultar la pelota (sin desactivar el GameObject)
             HideBall();
 
-            // Mostrar estadísticas después de un breve delay (solo si no se han mostrado ya)
+            // Cargar la escena de estadísticas después de un breve delay (solo si no se han mostrado ya)
             if (!statsShown)
             {
                 statsShown = true;
-                StartCoroutine(ShowEndGameStatistics());
-                Debug.Log("Iniciando visualización de estadísticas finales...");
+                StartCoroutine(LoadStatsScene());
+                Debug.Log("Iniciando carga de la escena de estadísticas...");
             }
         }
     }
 
-    // Método para mostrar estadísticas al final del juego
-    IEnumerator ShowEndGameStatistics()
+    // Método para cargar la escena de estadísticas
+    IEnumerator LoadStatsScene()
     {
-        Debug.Log("Esperando " + delayBeforeStats + " segundos antes de mostrar estadísticas...");
+        Debug.Log("Esperando " + delayBeforeStats + " segundos antes de cargar escena de estadísticas...");
 
         // Esperar el tiempo configurado
         yield return new WaitForSeconds(delayBeforeStats);
 
-        // Mostrar estadísticas si tenemos el componente
-        if (gameStatistics != null)
+        // Cargar la escena de estadísticas
+        if (GameController.Instance != null)
         {
-            Debug.Log("Mostrando estadísticas finales: " + golesAtajados + " goles atajados, " + golesAnotados + " goles recibidos");
-            gameStatistics.ShowEndGameStatistics(golesAtajados, golesAnotados);
+            Debug.Log("Cargando escena de estadísticas con: " + golesAtajados + " goles atajados, " + golesAnotados + " goles recibidos");
+            GameController.Instance.LoadStatsRankingScene(golesAtajados, golesAnotados);
         }
         else
         {
-            Debug.LogError("No se pudo mostrar estadísticas. El componente GameStatistics no está asignado.");
+            Debug.LogError("No se pudo cargar la escena de estadísticas. GameController no encontrado.");
         }
     }
 
@@ -535,12 +513,6 @@ public class Shoot : MonoBehaviour
         golesAtajados = 0;
         statsShown = false; // Reiniciar el flag de estadísticas
 
-        // Ocultar diálogos de estadísticas si están visibles
-        if (gameStatistics != null)
-        {
-            gameStatistics.HideAllDialogs();
-        }
-
         // Clear the countdown text
         if (countdownText != null)
         {
@@ -563,13 +535,6 @@ public class Shoot : MonoBehaviour
             countdownText.text = " ";
         }
 
-        // Guardar estadísticas finales en la base de datos
-        if (PlayerDataManager.Instance != null)
-        {
-            PlayerDataManager.Instance.UpdateCurrentSessionStats(golesAtajados, golesAnotados);
-            Debug.Log("Estadísticas finales guardadas en la base de datos al detener el ciclo.");
-        }
-
         // Ocultar la pelota (sin desactivar el GameObject)
         HideBall();
 
@@ -577,9 +542,9 @@ public class Shoot : MonoBehaviour
         if (!statsShown)
         {
             statsShown = true;
-            // Mostrar estadísticas después de un breve delay
-            StartCoroutine(ShowEndGameStatistics());
-            Debug.Log("Iniciando visualización de estadísticas finales tras detener el ciclo...");
+            // Cargar la escena de estadísticas después de un breve delay
+            StartCoroutine(LoadStatsScene());
+            Debug.Log("Iniciando carga de escena de estadísticas tras detener el ciclo...");
         }
     }
 

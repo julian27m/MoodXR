@@ -12,8 +12,16 @@ public class GameController : MonoBehaviour
     [Tooltip("Nombre de la escena que contiene el registro de usuarios")]
     public string registrationSceneName = "RegistrationScene";
 
+    [Tooltip("Nombre de la escena que muestra estadísticas y ranking")]
+    public string statsRankingSceneName = "StatsRanking";
+
+    // Para almacenar temporalmente los resultados de la última partida
+    private int lastSessionGolesAtajados = 0;
+    private int lastSessionGolesRecibidos = 0;
+
     // Estado del juego
     private bool isTransitioningToGame = false;
+    private bool isTransitioningToStats = false;
 
     private void Awake()
     {
@@ -69,12 +77,32 @@ public class GameController : MonoBehaviour
                 {
                     Debug.LogError("No hay un jugador activo en PlayerDataManager");
                     // Opcionalmente volver a la escena de registro
-                    // LoadRegistrationScene();
+                    LoadRegistrationScene();
                 }
             }
             else
             {
                 Debug.LogError("No se encontró el componente Shoot en la escena del juego");
+            }
+        }
+        // Si estamos cargando la escena de estadísticas
+        else if (scene.name == statsRankingSceneName && isTransitioningToStats)
+        {
+            isTransitioningToStats = false;
+
+            // Buscar el StatsRankingManager en la escena
+            StatsRankingManager statsManager = FindObjectOfType<StatsRankingManager>();
+
+            if (statsManager != null)
+            {
+                Debug.Log("Componente StatsRankingManager encontrado en la escena de estadísticas");
+
+                // Inicializar la escena con los datos de la última partida
+                statsManager.Initialize(lastSessionGolesAtajados, lastSessionGolesRecibidos);
+            }
+            else
+            {
+                Debug.LogError("No se encontró el StatsRankingManager en la escena de estadísticas");
             }
         }
     }
@@ -99,19 +127,37 @@ public class GameController : MonoBehaviour
         SceneManager.LoadScene(registrationSceneName);
     }
 
+    // Método para cargar la escena de estadísticas y ranking
+    public void LoadStatsRankingScene(int golesAtajados, int golesRecibidos)
+    {
+        // Guardar temporalmente los resultados para pasarlos a la escena de estadísticas
+        lastSessionGolesAtajados = golesAtajados;
+        lastSessionGolesRecibidos = golesRecibidos;
+
+        // Guardar en la base de datos
+        if (PlayerDataManager.Instance != null)
+        {
+            PlayerDataManager.Instance.UpdateCurrentSessionStats(golesAtajados, golesRecibidos);
+            Debug.Log("Estadísticas finales guardadas en la base de datos antes de cargar escena de estadísticas.");
+        }
+
+        isTransitioningToStats = true;
+        SceneManager.LoadScene(statsRankingSceneName);
+    }
+
     // Método para finalizar el juego y guardar estadísticas
-    public void FinishGame()
+    public void FinishGame(int golesAtajados, int golesRecibidos)
     {
         // Buscar el componente Shoot
         Shoot shootComponent = FindObjectOfType<Shoot>();
 
         if (shootComponent != null)
         {
-            // Detener el ciclo y guardar estadísticas
+            // Detener el ciclo
             shootComponent.StopCycle();
-
-            // Opcionalmente volver a la escena de registro o mostrar resultados
-            // LoadRegistrationScene();
         }
+
+        // Cargar la escena de estadísticas
+        LoadStatsRankingScene(golesAtajados, golesRecibidos);
     }
 }
