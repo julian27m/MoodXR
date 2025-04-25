@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.Globalization;
 
 public class TelemetriaManagerAnger : MonoBehaviour
 {
@@ -58,6 +59,20 @@ public class TelemetriaManagerAnger : MonoBehaviour
 
     [Tooltip("Duración fija del minijuego Balloon en segundos")]
     public float balloonGameDuration = 120f;
+
+    [Header("Identificación de Experiencia")]
+    [Tooltip("ID del equipo (se genera automáticamente si está vacío)")]
+    [SerializeField] private string equipoID = "";
+    [Tooltip("Archivo para almacenar el contador de experiencias")]
+    [SerializeField] private string contadorFilePath = "experiencia_contador_anger.txt";
+
+    // Variables para identificación
+    private string experienciaID = "";
+    private string codigoUsuario = "00"; // Valor por defecto
+    private string experienciaCompleta = "";
+
+    // Información del dispositivo
+    private string deviceName = "Desconocido";
 
     // Variables privadas para el manejo de logs
     private string logFilePath;
@@ -113,6 +128,18 @@ public class TelemetriaManagerAnger : MonoBehaviour
         _instance = this;
         DontDestroyOnLoad(this.gameObject);
 
+        // Generar o leer el ID único del equipo
+        GenerarEquipoID();
+
+        // Obtener el ID de la experiencia
+        GenerarExperienciaID();
+
+        // Generar el ID completo de la experiencia (sin código de usuario todavía)
+        experienciaCompleta = $"{equipoID}{experienciaID}00";
+
+        // Obtener el nombre del dispositivo
+        ObtenerDeviceName();
+
         // Inicializar diccionarios para cada escena
         InitializeSceneDictionaries();
 
@@ -126,9 +153,110 @@ public class TelemetriaManagerAnger : MonoBehaviour
         currentSceneStartTime = 0f;
 
         Debug.Log("TelemetriaManagerAnger inicializado en escena: " + currentSceneName);
+        Debug.Log($"ID de Experiencia: {experienciaCompleta}");
 
         // Suscribirse al evento de cambio de escena
         SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    /// <summary>
+    /// Genera un ID único para el equipo o lo carga si ya existe
+    /// </summary>
+    private void GenerarEquipoID()
+    {
+        try
+        {
+            // Si ya tenemos un ID de equipo definido, usarlo
+            if (!string.IsNullOrEmpty(equipoID))
+            {
+                Debug.Log($"Usando ID de equipo definido: {equipoID}");
+                return;
+            }
+
+            // Ruta para guardar el ID del equipo
+            string idFilePath = Path.Combine(Application.persistentDataPath, "equipo_id_anger.txt");
+
+            // Verificar si ya existe un ID guardado
+            if (File.Exists(idFilePath))
+            {
+                // Leer el ID existente
+                equipoID = File.ReadAllText(idFilePath).Trim();
+                Debug.Log($"ID de equipo cargado: {equipoID}");
+            }
+            else
+            {
+                // Generar un nuevo ID basado en el dispositivo y un número aleatorio
+                string deviceID = SystemInfo.deviceUniqueIdentifier;
+                // Tomar solo los primeros 8 caracteres para mantenerlo corto
+                string shortDeviceID = deviceID.Length > 8 ? deviceID.Substring(0, 8) : deviceID;
+
+                // Generar un ID de 2 dígitos para el equipo (puedes modificar esto según tus necesidades)
+                System.Random random = new System.Random();
+                equipoID = random.Next(1, 100).ToString("00");
+
+                // Guardar el ID para uso futuro
+                File.WriteAllText(idFilePath, equipoID);
+                Debug.Log($"Nuevo ID de equipo generado y guardado: {equipoID}");
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error generando ID de equipo: {e.Message}");
+            equipoID = "00"; // Valor por defecto en caso de error
+        }
+    }
+
+    /// <summary>
+    /// Genera un ID consecutivo para cada experiencia en este equipo
+    /// </summary>
+    private void GenerarExperienciaID()
+    {
+        try
+        {
+            // Ruta para guardar el contador de experiencias
+            string counterPath = Path.Combine(Application.persistentDataPath, contadorFilePath);
+            int contador = 1;
+
+            // Verificar si ya existe un contador guardado
+            if (File.Exists(counterPath))
+            {
+                // Leer el contador existente
+                string counterStr = File.ReadAllText(counterPath).Trim();
+                if (int.TryParse(counterStr, out int savedCounter))
+                {
+                    contador = savedCounter + 1;
+                }
+            }
+
+            // Formatear el ID de la experiencia como un número de 3 dígitos
+            experienciaID = contador.ToString("000");
+
+            // Guardar el contador actualizado
+            File.WriteAllText(counterPath, contador.ToString());
+            Debug.Log($"ID de experiencia generado: {experienciaID} (Contador: {contador})");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error generando ID de experiencia: {e.Message}");
+            experienciaID = "001"; // Valor por defecto en caso de error
+        }
+    }
+
+    /// <summary>
+    /// Obtiene el nombre del dispositivo utilizando SystemInfo
+    /// </summary>
+    private void ObtenerDeviceName()
+    {
+        try
+        {
+            deviceName = SystemInfo.deviceName;
+            Debug.Log($"Nombre del dispositivo obtenido: {deviceName}");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error al obtener nombre del dispositivo: {e.Message}");
+            deviceName = "Error_" + SystemInfo.deviceType.ToString();
+        }
     }
 
     private void InitializeSceneDictionaries()
@@ -137,12 +265,12 @@ public class TelemetriaManagerAnger : MonoBehaviour
         // Incluir todas las escenas conocidas, incluyendo "Anger" (ya que parece estar duplicada)
         // y "Close" (para registrar la atención en la escena final)
         string[] sceneNames = new string[] {
-        "Anger",
-        escenaSmashGame,
-        escenaReactionGame,
-        escenaBalloonGame,
-        "Close"
-    };
+            "Anger",
+            escenaSmashGame,
+            escenaReactionGame,
+            escenaBalloonGame,
+            "Close"
+        };
 
         foreach (string sceneName in sceneNames)
         {
@@ -150,12 +278,12 @@ public class TelemetriaManagerAnger : MonoBehaviour
             if (!colliderTotalLookTimesByScene.ContainsKey(sceneName))
             {
                 colliderTotalLookTimesByScene[sceneName] = new Dictionary<string, float>() {
-                {"Norte", 0f},
-                {"Sur", 0f},
-                {"Este", 0f},
-                {"Oeste", 0f},
-                {"Ninguno", 0f}
-            };
+                    {"Norte", 0f},
+                    {"Sur", 0f},
+                    {"Este", 0f},
+                    {"Oeste", 0f},
+                    {"Ninguno", 0f}
+                };
             }
         }
 
@@ -167,6 +295,7 @@ public class TelemetriaManagerAnger : MonoBehaviour
         yield return new WaitForSeconds(segundos);
         GenerarResumenFinal();
     }
+
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         // Cuando se carga una nueva escena
@@ -207,12 +336,12 @@ public class TelemetriaManagerAnger : MonoBehaviour
         if (!colliderTotalLookTimesByScene.ContainsKey(newSceneName))
         {
             colliderTotalLookTimesByScene[newSceneName] = new Dictionary<string, float>() {
-            {"Norte", 0f},
-            {"Sur", 0f},
-            {"Este", 0f},
-            {"Oeste", 0f},
-            {"Ninguno", 0f}
-        };
+                {"Norte", 0f},
+                {"Sur", 0f},
+                {"Este", 0f},
+                {"Oeste", 0f},
+                {"Ninguno", 0f}
+            };
 
             Debug.Log($"Creado nuevo diccionario para la escena: {newSceneName}");
         }
@@ -396,7 +525,7 @@ public class TelemetriaManagerAnger : MonoBehaviour
     {
         startTime = Time.time;
         lastGazeLogTime = Time.time;
-        Log("INICIO_APLICACION", "");
+        Log("INICIO_APLICACION", $"Dispositivo: {deviceName}, ID Experiencia: {experienciaCompleta}");
         isLogReady = true;
         Debug.Log("TelemetriaManagerAnger: isLogReady = true");
 
@@ -540,7 +669,8 @@ public class TelemetriaManagerAnger : MonoBehaviour
             Directory.CreateDirectory(directory);
         }
 
-        logFilePath = Path.Combine(directory, $"log_anger_{timestamp}.txt");
+        // Incluir el ID de la experiencia en el nombre del archivo
+        logFilePath = Path.Combine(directory, $"log_anger_{experienciaCompleta}_{timestamp}.txt");
 
         try
         {
@@ -553,6 +683,10 @@ public class TelemetriaManagerAnger : MonoBehaviour
 
             isLogFileCreated = true;
             Debug.Log($"Archivo de telemetría creado en: {logFilePath}");
+
+            // Registrar inmediatamente el ID de la experiencia y el dispositivo
+            RegistrarEvento("DISPOSITIVO", deviceName);
+            RegistrarEvento("EXPERIENCIA_ID", experienciaCompleta);
         }
         catch (Exception e)
         {
@@ -642,6 +776,7 @@ public class TelemetriaManagerAnger : MonoBehaviour
 
         // Generar resumen
         GuardarResumen();
+        GuardarResumenJSON();
     }
 
     public void GenerarResumenFinal()
@@ -653,6 +788,186 @@ public class TelemetriaManagerAnger : MonoBehaviour
 
         // Generar resumen
         GuardarResumen();
+        GuardarResumenJSON();
+    }
+
+    /// <summary>
+    /// Método para registrar el código del usuario y actualizar el ID de la experiencia
+    /// </summary>
+    /// <param name="codigo">Código del usuario</param>
+    public void RegistrarCodigoUsuario(string codigo)
+    {
+        try
+        {
+            // Si el código es válido, registrarlo
+            if (!string.IsNullOrEmpty(codigo))
+            {
+                codigoUsuario = codigo;
+
+                // Actualizar el ID completo de la experiencia
+                string antiguoID = experienciaCompleta;
+                experienciaCompleta = $"{equipoID}{experienciaID}{codigoUsuario}";
+
+                // Registrar el evento
+                Log("CODIGO_USUARIO", codigoUsuario);
+                Log("EXPERIENCIA_ID_ACTUALIZADA", $"Anterior: {antiguoID}, Nueva: {experienciaCompleta}");
+
+                Debug.Log($"Código de usuario registrado: {codigoUsuario}");
+                Debug.Log($"ID de experiencia actualizado: {experienciaCompleta}");
+
+                // Guardar inmediatamente
+                SaveLogBuffer();
+            }
+            else
+            {
+                Debug.LogWarning("Se intentó registrar un código de usuario vacío");
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error al registrar código de usuario: {e.Message}");
+        }
+    }
+
+    // Métodos auxiliares para calcular estadísticas
+
+    private float CalcularTiempoTotalExperiencia()
+    {
+        // Si la última escena es "Close", usar su tiempo de transición
+        if (sceneHistory.Count > 0 && sceneHistory[sceneHistory.Count - 1] == "Close")
+        {
+            return sceneTransitionTimes[sceneTransitionTimes.Count - 1];
+        }
+
+        // Si no, usar el tiempo actual
+        return Time.time - startTime;
+    }
+
+    private float CalcularTiempoTotalEscena(string nombreEscena)
+    {
+        // Usar duración fija para los minijuegos
+        if (nombreEscena == escenaSmashGame)
+            return smashGameDuration;
+
+        if (nombreEscena == escenaReactionGame)
+            return reactionGameDuration;
+
+        if (nombreEscena == escenaBalloonGame)
+            return balloonGameDuration;
+
+        // Para otras escenas, calcular el tiempo real
+        float tiempoTotal = 0f;
+
+        for (int i = 0; i < sceneHistory.Count; i++)
+        {
+            if (sceneHistory[i] == nombreEscena)
+            {
+                float inicioTiempo = sceneTransitionTimes[i];
+                float finTiempo;
+
+                if (i < sceneHistory.Count - 1)
+                {
+                    finTiempo = sceneTransitionTimes[i + 1];
+                }
+                else
+                {
+                    finTiempo = CalcularTiempoTotalExperiencia();
+                }
+
+                tiempoTotal += (finTiempo - inicioTiempo);
+            }
+        }
+
+        // Asegurarnos de que el tiempo nunca sea cero para evitar divisiones por cero
+        tiempoTotal = Mathf.Max(0.001f, tiempoTotal);
+
+        return tiempoTotal;
+    }
+
+    private float CalcularEfectividadSmash()
+    {
+        // Si no hay objetos golpeados, devolver 0
+        if (smashObjectsHit == 0) return 0f;
+
+        // Usar tiempo fijo de 120 segundos
+        return smashObjectsHit / 120f;
+    }
+
+    private float CalcularEfectividadReaction()
+    {
+        // Si no hay botones presionados, devolver 0
+        if (reactionButtonsPressed == 0) return 0f;
+
+        // Usar tiempo fijo de 120 segundos
+        return reactionButtonsPressed / 120f;
+    }
+
+    private float CalcularEfectividadBalloon()
+    {
+        // Si no hay globos reventados, devolver 0
+        if (balloonsPopped == 0) return 0f;
+
+        // Usar tiempo fijo de 120 segundos
+        return balloonsPopped / 120f;
+    }
+
+    private void GenerarResumenAtencion(StringBuilder resumen)
+    {
+        // Resumen de atención del usuario por escena
+        resumen.AppendLine("\nATENCIÓN DEL USUARIO:");
+
+        // Lista para almacenar escenas ya procesadas para evitar duplicados
+        List<string> escenasProcesadas = new List<string>();
+
+        // Procesar cada escena que fue visitada (excepto duplicados)
+        foreach (string escena in sceneHistory.ToArray())
+        {
+            // Ignorar escena de cierre y duplicados
+            if (escena == "Close" || escenasProcesadas.Contains(escena))
+                continue;
+
+            escenasProcesadas.Add(escena);
+
+            if (colliderTotalLookTimesByScene.ContainsKey(escena))
+            {
+                Dictionary<string, float> tiemposMirada = colliderTotalLookTimesByScene[escena];
+
+                // Calcular el tiempo real de la escena usando los datos de transición
+                float tiempoRealEscena = CalcularTiempoTotalEscena(escena);
+
+                // Usar siempre el tiempo real de la escena (no el de los minijuegos)
+                resumen.AppendLine($"\nEscena: {escena}");
+                resumen.AppendLine($"Tiempo total en esta escena: {tiempoRealEscena:F2} segundos");
+                resumen.AppendLine($"Tiempo mirando al norte: {tiemposMirada["Norte"]:F2} segundos");
+                resumen.AppendLine($"Tiempo mirando al sur: {tiemposMirada["Sur"]:F2} segundos");
+                resumen.AppendLine($"Tiempo mirando al este: {tiemposMirada["Este"]:F2} segundos");
+                resumen.AppendLine($"Tiempo mirando al oeste: {tiemposMirada["Oeste"]:F2} segundos");
+                resumen.AppendLine($"Tiempo sin mirar a ningún elemento: {tiemposMirada["Ninguno"]:F2} segundos");
+
+                // Calcular tiempo total registrado en miradas
+                float tiempoTotalRegistrado = tiemposMirada["Norte"] + tiemposMirada["Sur"] +
+                                            tiemposMirada["Este"] + tiemposMirada["Oeste"] +
+                                            tiemposMirada["Ninguno"];
+
+                // Calcular porcentajes solo si hay tiempo total
+                if (tiempoRealEscena > 0)
+                {
+                    resumen.AppendLine("Porcentajes de atención:");
+                    resumen.AppendLine($"Norte: {(tiemposMirada["Norte"] / tiempoRealEscena * 100):F2}%");
+                    resumen.AppendLine($"Sur: {(tiemposMirada["Sur"] / tiempoRealEscena * 100):F2}%");
+                    resumen.AppendLine($"Este: {(tiemposMirada["Este"] / tiempoRealEscena * 100):F2}%");
+                    resumen.AppendLine($"Oeste: {(tiemposMirada["Oeste"] / tiempoRealEscena * 100):F2}%");
+                    resumen.AppendLine($"Sin foco específico: {(tiemposMirada["Ninguno"] / tiempoRealEscena * 100):F2}%");
+                }
+
+                // Advertencia si hay discrepancia significativa en los tiempos registrados
+                if (tiempoTotalRegistrado > 0 && Math.Abs(tiempoTotalRegistrado - tiempoRealEscena) > 5.0f)
+                {
+                    resumen.AppendLine($"Nota: Hay una diferencia de {(tiempoRealEscena - tiempoTotalRegistrado):F2} segundos " +
+                                      $"entre el tiempo total de la escena y el tiempo total registrado en miradas.");
+                }
+            }
+        }
     }
 
     // Modificación del método GuardarResumen para usar nuestra función personalizada
@@ -666,12 +981,12 @@ public class TelemetriaManagerAnger : MonoBehaviour
                 if (!colliderTotalLookTimesByScene.ContainsKey(escena))
                 {
                     colliderTotalLookTimesByScene[escena] = new Dictionary<string, float>() {
-                    {"Norte", 0f},
-                    {"Sur", 0f},
-                    {"Este", 0f},
-                    {"Oeste", 0f},
-                    {"Ninguno", 0f}
-                };
+                        {"Norte", 0f},
+                        {"Sur", 0f},
+                        {"Este", 0f},
+                        {"Oeste", 0f},
+                        {"Ninguno", 0f}
+                    };
                 }
             }
 
@@ -685,6 +1000,8 @@ public class TelemetriaManagerAnger : MonoBehaviour
 
             StringBuilder resumen = new StringBuilder();
             resumen.AppendLine("RESUMEN DE LA EXPERIENCIA");
+            resumen.AppendLine($"ID de Experiencia: {experienciaCompleta}");
+            resumen.AppendLine($"Dispositivo: {deviceName}");
             resumen.AppendLine($"Tiempo total de experiencia: {tiempoTotalExperiencia:F4} segundos");
 
             // Historial de escenas visitadas
@@ -862,7 +1179,7 @@ public class TelemetriaManagerAnger : MonoBehaviour
             string summaryPath = Path.Combine(
                 Application.persistentDataPath,
                 "Logs",
-                $"resumen_anger_{DateTime.Now.ToString("yyyyMMdd_HHmmss")}.txt");
+                $"resumen_anger_{experienciaCompleta}_{DateTime.Now.ToString("yyyyMMdd_HHmmss")}.txt");
 
             File.WriteAllText(summaryPath, resumen.ToString());
             Debug.Log($"Resumen guardado en: {summaryPath}");
@@ -873,165 +1190,233 @@ public class TelemetriaManagerAnger : MonoBehaviour
         }
     }
 
-    private void GenerarResumenAtencion(StringBuilder resumen)
+    private void GuardarResumenJSON()
     {
-        // Resumen de atención del usuario por escena
-        resumen.AppendLine("\nATENCIÓN DEL USUARIO:");
-
-        // Lista para almacenar escenas ya procesadas para evitar duplicados
-        List<string> escenasProcesadas = new List<string>();
-
-        // Procesar cada escena que fue visitada (excepto duplicados)
-        foreach (string escena in sceneHistory.ToArray())
+        try
         {
-            // Ignorar escena de cierre y duplicados
-            if (escena == "Close" || escenasProcesadas.Contains(escena))
-                continue;
+            // Añadir método auxiliar para formatear números con punto decimal
+            System.Globalization.CultureInfo invCulture = System.Globalization.CultureInfo.InvariantCulture;
 
-            escenasProcesadas.Add(escena);
+            // Calcular estadísticas principales
+            float efectividadSmash = CalcularEfectividadSmash();
+            float efectividadReaction = CalcularEfectividadReaction();
+            float efectividadBalloon = CalcularEfectividadBalloon();
+            float tiempoTotalExperiencia = CalcularTiempoTotalExperiencia();
 
-            if (colliderTotalLookTimesByScene.ContainsKey(escena))
+            // Crear un objeto JSON para almacenar los datos del resumen
+            System.Text.StringBuilder jsonBuilder = new System.Text.StringBuilder();
+            jsonBuilder.AppendLine("{");
+
+            // Información general
+            jsonBuilder.AppendLine("  \"dispositivo\": \"" + deviceName + "\",");
+            jsonBuilder.AppendLine("  \"experienciaID\": \"" + experienciaCompleta + "\",");
+            jsonBuilder.AppendLine("  \"tiempoTotal\": " + tiempoTotalExperiencia.ToString("F2", invCulture) + ",");
+
+            // Historial de escenas
+            jsonBuilder.AppendLine("  \"secuenciaEscenas\": [");
+            for (int i = 0; i < sceneHistory.Count; i++)
             {
-                Dictionary<string, float> tiemposMirada = colliderTotalLookTimesByScene[escena];
+                string escena = sceneHistory[i];
+                float tiempo = sceneTransitionTimes[i];
 
-                // Calcular el tiempo real de la escena usando los datos de transición
-                float tiempoRealEscena = 0f;
-                for (int i = 0; i < sceneHistory.Count; i++)
-                {
-                    if (sceneHistory[i] == escena)
-                    {
-                        float inicioTiempo = sceneTransitionTimes[i];
-                        float finTiempo;
-
-                        if (i < sceneHistory.Count - 1)
-                        {
-                            finTiempo = sceneTransitionTimes[i + 1];
-                        }
-                        else
-                        {
-                            finTiempo = Time.time - startTime;
-                        }
-
-                        tiempoRealEscena += (finTiempo - inicioTiempo);
-                    }
-                }
-
-                // Usar siempre el tiempo real de la escena (no el de los minijuegos)
-                resumen.AppendLine($"\nEscena: {escena}");
-                resumen.AppendLine($"Tiempo total en esta escena: {tiempoRealEscena:F2} segundos");
-                resumen.AppendLine($"Tiempo mirando al norte: {tiemposMirada["Norte"]:F2} segundos");
-                resumen.AppendLine($"Tiempo mirando al sur: {tiemposMirada["Sur"]:F2} segundos");
-                resumen.AppendLine($"Tiempo mirando al este: {tiemposMirada["Este"]:F2} segundos");
-                resumen.AppendLine($"Tiempo mirando al oeste: {tiemposMirada["Oeste"]:F2} segundos");
-                resumen.AppendLine($"Tiempo sin mirar a ningún elemento: {tiemposMirada["Ninguno"]:F2} segundos");
-
-                // Calcular tiempo total registrado en miradas
-                float tiempoTotalRegistrado = tiemposMirada["Norte"] + tiemposMirada["Sur"] +
-                                            tiemposMirada["Este"] + tiemposMirada["Oeste"] +
-                                            tiemposMirada["Ninguno"];
-
-                // Calcular porcentajes solo si hay tiempo total
-                if (tiempoRealEscena > 0)
-                {
-                    resumen.AppendLine("Porcentajes de atención:");
-                    resumen.AppendLine($"Norte: {(tiemposMirada["Norte"] / tiempoRealEscena * 100):F2}%");
-                    resumen.AppendLine($"Sur: {(tiemposMirada["Sur"] / tiempoRealEscena * 100):F2}%");
-                    resumen.AppendLine($"Este: {(tiemposMirada["Este"] / tiempoRealEscena * 100):F2}%");
-                    resumen.AppendLine($"Oeste: {(tiemposMirada["Oeste"] / tiempoRealEscena * 100):F2}%");
-                    resumen.AppendLine($"Sin foco específico: {(tiemposMirada["Ninguno"] / tiempoRealEscena * 100):F2}%");
-                }
-
-                // Advertencia si hay discrepancia significativa en los tiempos registrados
-                if (tiempoTotalRegistrado > 0 && Math.Abs(tiempoTotalRegistrado - tiempoRealEscena) > 5.0f)
-                {
-                    resumen.AppendLine($"Nota: Hay una diferencia de {(tiempoRealEscena - tiempoTotalRegistrado):F2} segundos " +
-                                      $"entre el tiempo total de la escena y el tiempo total registrado en miradas.");
-                }
-            }
-        }
-    }
-
-    // Métodos auxiliares para calcular estadísticas
-
-    private float CalcularTiempoTotalExperiencia()
-    {
-        // Si la última escena es "Close", usar su tiempo de transición
-        if (sceneHistory.Count > 0 && sceneHistory[sceneHistory.Count - 1] == "Close")
-        {
-            return sceneTransitionTimes[sceneTransitionTimes.Count - 1];
-        }
-
-        // Si no, usar el tiempo actual
-        return Time.time - startTime;
-    }
-
-    private float CalcularTiempoTotalEscena(string nombreEscena)
-    {
-        // Usar duración fija para los minijuegos
-        if (nombreEscena == escenaSmashGame)
-            return smashGameDuration;
-
-        if (nombreEscena == escenaReactionGame)
-            return reactionGameDuration;
-
-        if (nombreEscena == escenaBalloonGame)
-            return balloonGameDuration;
-
-        // Para otras escenas, calcular el tiempo real
-        float tiempoTotal = 0f;
-
-        for (int i = 0; i < sceneHistory.Count; i++)
-        {
-            if (sceneHistory[i] == nombreEscena)
-            {
-                float inicioTiempo = sceneTransitionTimes[i];
-                float finTiempo;
-
+                // Calcular duración de cada escena
+                float duracionEscena;
                 if (i < sceneHistory.Count - 1)
                 {
-                    finTiempo = sceneTransitionTimes[i + 1];
+                    duracionEscena = sceneTransitionTimes[i + 1] - tiempo;
                 }
                 else
                 {
-                    finTiempo = CalcularTiempoTotalExperiencia();
+                    duracionEscena = tiempoTotalExperiencia - tiempo;
                 }
 
-                tiempoTotal += (finTiempo - inicioTiempo);
+                jsonBuilder.AppendLine("    {");
+                jsonBuilder.AppendLine("      \"escena\": \"" + escena + "\",");
+                jsonBuilder.AppendLine("      \"tiempoInicio\": " + tiempo.ToString("F2", invCulture) + ",");
+                jsonBuilder.AppendLine("      \"duracion\": " + duracionEscena.ToString("F2", invCulture));
+                if (i < sceneHistory.Count - 1)
+                    jsonBuilder.AppendLine("    },");
+                else
+                    jsonBuilder.AppendLine("    }");
+            }
+            jsonBuilder.AppendLine("  ],");
+
+            // Atención del usuario
+            jsonBuilder.AppendLine("  \"atencionUsuario\": {");
+
+            // Crear una lista de escenas únicas a procesar (excluyendo "Close" y duplicados)
+            List<string> escenasUnicas = new List<string>();
+            foreach (string escena in sceneHistory)
+            {
+                if (escena != "Close" && !escenasUnicas.Contains(escena))
+                {
+                    escenasUnicas.Add(escena);
+                }
+            }
+
+            // Procesar cada escena única que fue visitada
+            for (int escenaIndex = 0; escenaIndex < escenasUnicas.Count; escenaIndex++)
+            {
+                string escena = escenasUnicas[escenaIndex];
+
+                if (colliderTotalLookTimesByScene.ContainsKey(escena))
+                {
+                    Dictionary<string, float> tiemposMirada = colliderTotalLookTimesByScene[escena];
+
+                    // Calcular el tiempo real de la escena
+                    float tiempoRealEscena = CalcularTiempoTotalEscena(escena);
+
+                    jsonBuilder.AppendLine("    \"" + escena + "\": {");
+                    jsonBuilder.AppendLine("      \"tiempoTotal\": " + tiempoRealEscena.ToString("F2", invCulture) + ",");
+                    jsonBuilder.AppendLine("      \"tiemposPorDireccion\": {");
+                    jsonBuilder.AppendLine("        \"norte\": " + tiemposMirada["Norte"].ToString("F2", invCulture) + ",");
+                    jsonBuilder.AppendLine("        \"sur\": " + tiemposMirada["Sur"].ToString("F2", invCulture) + ",");
+                    jsonBuilder.AppendLine("        \"este\": " + tiemposMirada["Este"].ToString("F2", invCulture) + ",");
+                    jsonBuilder.AppendLine("        \"oeste\": " + tiemposMirada["Oeste"].ToString("F2", invCulture) + ",");
+                    jsonBuilder.AppendLine("        \"ninguno\": " + tiemposMirada["Ninguno"].ToString("F2", invCulture));
+                    jsonBuilder.AppendLine("      },");
+
+                    // Calcular porcentajes si hay tiempo
+                    if (tiempoRealEscena > 0)
+                    {
+                        jsonBuilder.AppendLine("      \"porcentajes\": {");
+                        jsonBuilder.AppendLine("        \"norte\": " + (tiemposMirada["Norte"] / tiempoRealEscena * 100).ToString("F2", invCulture) + ",");
+                        jsonBuilder.AppendLine("        \"sur\": " + (tiemposMirada["Sur"] / tiempoRealEscena * 100).ToString("F2", invCulture) + ",");
+                        jsonBuilder.AppendLine("        \"este\": " + (tiemposMirada["Este"] / tiempoRealEscena * 100).ToString("F2", invCulture) + ",");
+                        jsonBuilder.AppendLine("        \"oeste\": " + (tiemposMirada["Oeste"] / tiempoRealEscena * 100).ToString("F2", invCulture) + ",");
+                        jsonBuilder.AppendLine("        \"ninguno\": " + (tiemposMirada["Ninguno"] / tiempoRealEscena * 100).ToString("F2", invCulture));
+                        jsonBuilder.AppendLine("      }");
+                    }
+                    else
+                    {
+                        jsonBuilder.AppendLine("      \"porcentajes\": {}");
+                    }
+
+                    // Añadir una coma si NO es la última escena
+                    if (escenaIndex < escenasUnicas.Count - 1)
+                    {
+                        jsonBuilder.AppendLine("    },");
+                    }
+                    else
+                    {
+                        jsonBuilder.AppendLine("    }");
+                    }
+                }
+            }
+            jsonBuilder.AppendLine("  },");
+
+            // Minijuegos
+            jsonBuilder.AppendLine("  \"minijuegos\": {");
+
+            // Smash
+            jsonBuilder.AppendLine("    \"smash\": {");
+            jsonBuilder.AppendLine("      \"objetosGolpeados\": " + smashObjectsHit + ",");
+            jsonBuilder.AppendLine("      \"duracion\": 120.00,");
+            jsonBuilder.AppendLine("      \"efectividad\": " + efectividadSmash.ToString("F2", invCulture));
+            if (smashHitTimes.Count > 0)
+            {
+                jsonBuilder.Append("      ,\"tiemposGolpes\": [");
+                for (int i = 0; i < smashHitTimes.Count; i++)
+                {
+                    jsonBuilder.Append(smashHitTimes[i].ToString("F2", invCulture));
+                    if (i < smashHitTimes.Count - 1)
+                        jsonBuilder.Append(", ");
+                }
+                jsonBuilder.AppendLine("]");
+            }
+            jsonBuilder.AppendLine("    },");
+
+            // Reaction
+            jsonBuilder.AppendLine("    \"reaction\": {");
+            jsonBuilder.AppendLine("      \"botonesPresionados\": " + reactionButtonsPressed + ",");
+            jsonBuilder.AppendLine("      \"duracion\": 120.00,");
+            jsonBuilder.AppendLine("      \"efectividad\": " + efectividadReaction.ToString("F2", invCulture));
+            if (reactionPressTimes.Count > 0)
+            {
+                jsonBuilder.Append("      ,\"tiemposPresion\": [");
+                for (int i = 0; i < reactionPressTimes.Count; i++)
+                {
+                    jsonBuilder.Append(reactionPressTimes[i].ToString("F2", invCulture));
+                    if (i < reactionPressTimes.Count - 1)
+                        jsonBuilder.Append(", ");
+                }
+                jsonBuilder.AppendLine("]");
+            }
+            jsonBuilder.AppendLine("    },");
+
+            // Balloon
+            jsonBuilder.AppendLine("    \"balloon\": {");
+            jsonBuilder.AppendLine("      \"globosReventados\": " + balloonsPopped + ",");
+            jsonBuilder.AppendLine("      \"duracion\": 120.00,");
+            jsonBuilder.AppendLine("      \"efectividad\": " + efectividadBalloon.ToString("F2", invCulture));
+            if (balloonPopTimes.Count > 0)
+            {
+                jsonBuilder.Append("      ,\"tiemposGlobos\": [");
+                for (int i = 0; i < balloonPopTimes.Count; i++)
+                {
+                    jsonBuilder.Append(balloonPopTimes[i].ToString("F2", invCulture));
+                    if (i < balloonPopTimes.Count - 1)
+                        jsonBuilder.Append(", ");
+                }
+                jsonBuilder.AppendLine("]");
+            }
+            jsonBuilder.AppendLine("    }");
+            jsonBuilder.AppendLine("  },");
+
+            // Resumen general
+            jsonBuilder.AppendLine("  \"resumenGeneral\": {");
+            int totalAcciones = smashObjectsHit + reactionButtonsPressed + balloonsPopped;
+            float tiempoTotalMinijuegos = 360f;
+            float efectividadGeneral = totalAcciones > 0 ? totalAcciones / tiempoTotalMinijuegos : 0;
+
+            jsonBuilder.AppendLine("    \"totalAcciones\": " + totalAcciones + ",");
+            jsonBuilder.AppendLine("    \"tiempoTotalMinijuegos\": 360.00,");
+            jsonBuilder.AppendLine("    \"efectividadGeneral\": " + efectividadGeneral.ToString("F2", invCulture));
+            jsonBuilder.AppendLine("  }");
+
+            // Cerrar el objeto JSON
+            jsonBuilder.AppendLine("}");
+
+            // Antes de guardar el archivo, asegúrate de que el directorio exista
+            string directory = Path.Combine(Application.persistentDataPath, "Logs");
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+                Debug.Log($"Creando directorio para resumen: {directory}");
+            }
+
+            // Registrar que el resumen JSON fue generado
+            Log("RESUMEN_JSON_GENERADO", "Resumen en formato JSON generado");
+            SaveLogBuffer();
+
+            // Generar el nombre del archivo usando el mismo ID que los logs
+            string summaryPath = Path.Combine(
+                directory,
+                $"resumen_anger_json_{experienciaCompleta}_{DateTime.Now.ToString("yyyyMMdd_HHmmss")}.json");
+
+            // Guardar el archivo JSON
+            File.WriteAllText(summaryPath, jsonBuilder.ToString());
+            Debug.Log($"Resumen en formato JSON guardado en: {summaryPath}");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error al generar resumen JSON: {e.Message}\n{e.StackTrace}");
+
+            // Intentar guardar en una ubicación alternativa en caso de error
+            try
+            {
+                string emergencyPath = Path.Combine(
+                    Application.persistentDataPath,
+                    $"emergency_resumen_json_{DateTime.Now.ToString("yyyyMMdd_HHmmss")}.json");
+
+                File.WriteAllText(emergencyPath, "[ERROR] No se pudo generar el resumen completo.");
+                Debug.LogWarning($"Se intentó guardar un resumen de emergencia en: {emergencyPath}");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Error también al guardar resumen de emergencia: {ex.Message}");
             }
         }
-
-        // Asegurarnos de que el tiempo nunca sea cero para evitar divisiones por cero
-        tiempoTotal = Mathf.Max(0.001f, tiempoTotal);
-
-        return tiempoTotal;
-    }
-
-    private float CalcularEfectividadSmash()
-    {
-        // Si no hay objetos golpeados, devolver 0
-        if (smashObjectsHit == 0) return 0f;
-
-        // Usar tiempo fijo de 120 segundos
-        return smashObjectsHit / 120f;
-    }
-
-    private float CalcularEfectividadReaction()
-    {
-        // Si no hay botones presionados, devolver 0
-        if (reactionButtonsPressed == 0) return 0f;
-
-        // Usar tiempo fijo de 120 segundos
-        return reactionButtonsPressed / 120f;
-    }
-
-
-    private float CalcularEfectividadBalloon()
-    {
-        // Si no hay globos reventados, devolver 0
-        if (balloonsPopped == 0) return 0f;
-
-        // Usar tiempo fijo de 120 segundos
-        return balloonsPopped / 120f;
     }
 
     // ==== Métodos públicos para registrar eventos desde otros scripts ====
@@ -1043,7 +1428,7 @@ public class TelemetriaManagerAnger : MonoBehaviour
         {
             if (!isLogReady) return;
 
-            // SOLUCIÓN: Verificar si el nombre del objeto contiene "desconocido"
+            // Verificar si el nombre del objeto contiene "desconocido"
             // Si es así, ignorarlo para evitar contar dos veces
             if (nombreObjeto.Contains("desconocido"))
             {
@@ -1098,7 +1483,6 @@ public class TelemetriaManagerAnger : MonoBehaviour
             Debug.LogError($"Error en RegistrarBotonPresionado: {e.Message}");
         }
     }
-
 
     // Eventos del minijuego Balloon
     public void RegistrarGloboGolpeado()
@@ -1166,4 +1550,3 @@ public class TelemetriaManagerAnger : MonoBehaviour
         Debug.Log("Datos de telemetría reiniciados");
     }
 }
-
