@@ -37,12 +37,17 @@ public class TelemetriaManager : MonoBehaviour
     [Tooltip("Collider de la respiración")]
     public Transform respiracionCollider;
 
-    // Información del dispositivo
-    private string deviceName = "Desconocido";
+    // Variables para ID único de experiencia
+    [Header("Identificación de Experiencia")]
+    [Tooltip("ID del equipo (se genera automáticamente si está vacío)")]
+    [SerializeField] private string equipoID = "";
+    [Tooltip("Archivo para almacenar el contador de experiencias")]
+    [SerializeField] private string contadorFilePath = "experiencia_contador.txt";
 
-
-    // Variable para almacenar el código del usuario una vez guardado
-    private string codigoUsuario = "";
+    // Variables para identificación
+    private string experienciaID = "";
+    private string codigoUsuario = "00"; // Valor por defecto
+    private string experienciaCompleta = "";
 
     private string logFilePath;
     private StringBuilder logBuffer = new StringBuilder();
@@ -56,6 +61,9 @@ public class TelemetriaManager : MonoBehaviour
     private string currentColliderName = "Ninguno";
     private float lastGazeLogTime = 0f;
     private float currentColliderStartTime = 0f;
+
+    // Información del dispositivo
+    private string deviceName = "Desconocido";
 
     // Diccionario para almacenar tiempos totales de mirada
     private Dictionary<string, float> colliderTotalLookTimes = new Dictionary<string, float>() {
@@ -121,6 +129,15 @@ public class TelemetriaManager : MonoBehaviour
         _instance = this;
         DontDestroyOnLoad(this.gameObject);
 
+        // Generar o leer el ID único del equipo
+        GenerarEquipoID();
+
+        // Obtener el ID de la experiencia
+        GenerarExperienciaID();
+
+        // Generar el ID completo de la experiencia (sin código de usuario todavía)
+        experienciaCompleta = $"{equipoID}{experienciaID}00";
+
         // Obtener el nombre del dispositivo
         ObtenerDeviceName();
 
@@ -129,9 +146,93 @@ public class TelemetriaManager : MonoBehaviour
 
         // Debug info
         Debug.Log("TelemetriaManager inicializado");
+        Debug.Log($"ID de Experiencia: {experienciaCompleta}");
 
         // Verificar que tengamos los colliders necesarios
         ValidarColliders();
+    }
+
+    /// <summary>
+    /// Genera un ID único para el equipo o lo carga si ya existe
+    /// </summary>
+    private void GenerarEquipoID()
+    {
+        try
+        {
+            // Si ya tenemos un ID de equipo definido, usarlo
+            if (!string.IsNullOrEmpty(equipoID))
+            {
+                Debug.Log($"Usando ID de equipo definido: {equipoID}");
+                return;
+            }
+
+            // Ruta para guardar el ID del equipo
+            string idFilePath = Path.Combine(Application.persistentDataPath, "equipo_id.txt");
+
+            // Verificar si ya existe un ID guardado
+            if (File.Exists(idFilePath))
+            {
+                // Leer el ID existente
+                equipoID = File.ReadAllText(idFilePath).Trim();
+                Debug.Log($"ID de equipo cargado: {equipoID}");
+            }
+            else
+            {
+                // Generar un nuevo ID basado en el dispositivo y un número aleatorio
+                string deviceID = SystemInfo.deviceUniqueIdentifier;
+                // Tomar solo los primeros 8 caracteres para mantenerlo corto
+                string shortDeviceID = deviceID.Length > 8 ? deviceID.Substring(0, 8) : deviceID;
+
+                // Generar un ID de 2 dígitos para el equipo (puedes modificar esto según tus necesidades)
+                System.Random random = new System.Random();
+                equipoID = random.Next(1, 100).ToString("00");
+
+                // Guardar el ID para uso futuro
+                File.WriteAllText(idFilePath, equipoID);
+                Debug.Log($"Nuevo ID de equipo generado y guardado: {equipoID}");
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error generando ID de equipo: {e.Message}");
+            equipoID = "00"; // Valor por defecto en caso de error
+        }
+    }
+
+    /// <summary>
+    /// Genera un ID consecutivo para cada experiencia en este equipo
+    /// </summary>
+    private void GenerarExperienciaID()
+    {
+        try
+        {
+            // Ruta para guardar el contador de experiencias
+            string counterPath = Path.Combine(Application.persistentDataPath, contadorFilePath);
+            int contador = 1;
+
+            // Verificar si ya existe un contador guardado
+            if (File.Exists(counterPath))
+            {
+                // Leer el contador existente
+                string counterStr = File.ReadAllText(counterPath).Trim();
+                if (int.TryParse(counterStr, out int savedCounter))
+                {
+                    contador = savedCounter + 1;
+                }
+            }
+
+            // Formatear el ID de la experiencia como un número de 3 dígitos
+            experienciaID = contador.ToString("000");
+
+            // Guardar el contador actualizado
+            File.WriteAllText(counterPath, contador.ToString());
+            Debug.Log($"ID de experiencia generado: {experienciaID} (Contador: {contador})");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error generando ID de experiencia: {e.Message}");
+            experienciaID = "001"; // Valor por defecto en caso de error
+        }
     }
 
     /// <summary>
@@ -146,6 +247,7 @@ public class TelemetriaManager : MonoBehaviour
 
             // Registrar el nombre del dispositivo para telemetría
             RegistrarEvento("DEVICE_NAME", deviceName);
+            RegistrarEvento("EXPERIENCIA_ID", experienciaCompleta);
         }
         catch (Exception e)
         {
@@ -158,7 +260,7 @@ public class TelemetriaManager : MonoBehaviour
     {
         startTime = Time.time;
         lastGazeLogTime = Time.time; // Inicializar el tiempo del último registro de mirada
-        Log("INICIO_APLICACION", $"Dispositivo: {deviceName}");
+        Log("INICIO_APLICACION", $"Dispositivo: {deviceName}, ID Experiencia: {experienciaCompleta}");
         isLogReady = true; // Marcar que estamos listos para registrar eventos
         Debug.Log("TelemetriaManager: isLogReady = true");
 
@@ -300,11 +402,8 @@ public class TelemetriaManager : MonoBehaviour
             Directory.CreateDirectory(directory);
         }
 
-        // Incluir el nombre del dispositivo en el nombre del archivo
-        string deviceNameSafe = deviceName.Replace(" ", "_").Replace(":", "").Replace("/", "");
-        if (deviceNameSafe.Length > 20) deviceNameSafe = deviceNameSafe.Substring(0, 20);
-
-        logFilePath = Path.Combine(directory, $"log_{deviceNameSafe}_{timestamp}.txt");
+        // Incluir el ID de la experiencia en el nombre del archivo
+        logFilePath = Path.Combine(directory, $"log_{experienciaCompleta}_{timestamp}.txt");
 
         try
         {
@@ -412,14 +511,25 @@ public class TelemetriaManager : MonoBehaviour
         Log("FIN_APLICACION", $"Tiempo total: {Time.time - startTime}");
         SaveLogBuffer();
 
-        // Generar resumen
-        GuardarResumen();
+        try
+        {
+            // Generar resumen y forzar su guardado
+            GuardarResumen();
+            Debug.Log("Resumen JSON generado en OnApplicationQuit");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error al generar el resumen en OnApplicationQuit: {e.Message}");
+        }
     }
 
     private void GuardarResumen()
     {
         try
         {
+            // Añadir método auxiliar para formatear números con punto decimal
+            System.Globalization.CultureInfo invCulture = System.Globalization.CultureInfo.InvariantCulture;
+
             // Calcular promedio de tiempo entre agarrar y soltar hojas
             float tiempoPromedioInteraccionHojas = 0f;
             int contadorTiempos = 0;
@@ -435,133 +545,165 @@ public class TelemetriaManager : MonoBehaviour
                 tiempoPromedioInteraccionHojas /= contadorTiempos;
             }
 
-            StringBuilder resumen = new StringBuilder();
-            resumen.AppendLine("RESUMEN DE LA EXPERIENCIA");
+            // Crear un objeto JSON para almacenar los datos del resumen
+            System.Text.StringBuilder jsonBuilder = new System.Text.StringBuilder();
+            jsonBuilder.AppendLine("{");
 
-            // Añadir información del dispositivo al resumen
-            resumen.AppendLine($"Dispositivo: {deviceName}");
+            // Información general (sin incluir identificadores)
+            jsonBuilder.AppendLine("  \"dispositivo\": \"" + deviceName + "\",");
+            jsonBuilder.AppendLine("  \"tiempoTotal\": " + (Time.time - startTime).ToString("F2", invCulture) + ",");
 
-            // Añadir código de usuario al resumen
-            if (!string.IsNullOrEmpty(codigoUsuario))
-            {
-                resumen.AppendLine($"Código de usuario: {codigoUsuario}");
-            }
-            else
-            {
-                resumen.AppendLine("Código de usuario: No especificado");
-            }
+            // Atención del usuario
+            jsonBuilder.AppendLine("  \"atencionUsuario\": {");
+            jsonBuilder.AppendLine("    \"tiempoArbol\": " + colliderTotalLookTimes["Arbol"].ToString("F2", invCulture) + ",");
+            jsonBuilder.AppendLine("    \"tiempoCaja\": " + colliderTotalLookTimes["Caja"].ToString("F2", invCulture) + ",");
+            jsonBuilder.AppendLine("    \"tiempoFogata\": " + colliderTotalLookTimes["Fogata"].ToString("F2", invCulture) + ",");
+            jsonBuilder.AppendLine("    \"tiempoRespiracion\": " + colliderTotalLookTimes["Respiracion"].ToString("F2", invCulture) + ",");
+            jsonBuilder.AppendLine("    \"tiempoSinFoco\": " + colliderTotalLookTimes["Ninguno"].ToString("F2", invCulture) + ",");
 
-            resumen.AppendLine($"Tiempo total de experiencia: {Time.time - startTime} segundos");
-
-            // Resumen de atención del usuario
-            resumen.AppendLine("\nATENCIÓN DEL USUARIO:");
-            resumen.AppendLine($"Tiempo mirando al árbol: {colliderTotalLookTimes["Arbol"]:F2} segundos");
-            resumen.AppendLine($"Tiempo mirando a la caja: {colliderTotalLookTimes["Caja"]:F2} segundos");
-            resumen.AppendLine($"Tiempo mirando a la fogata: {colliderTotalLookTimes["Fogata"]:F2} segundos");
-            resumen.AppendLine($"Tiempo mirando a la respiración: {colliderTotalLookTimes["Respiracion"]:F2} segundos");
-            resumen.AppendLine($"Tiempo sin mirar a ningún elemento: {colliderTotalLookTimes["Ninguno"]:F2} segundos");
-
-            // Calcular porcentajes de atención
+            // Porcentajes de atención
             float tiempoTotal = Time.time - startTime;
             if (tiempoTotal > 0)
             {
-                resumen.AppendLine("\nPorcentajes de atención:");
-                resumen.AppendLine($"Árbol: {(colliderTotalLookTimes["Arbol"] / tiempoTotal * 100):F2}%");
-                resumen.AppendLine($"Caja: {(colliderTotalLookTimes["Caja"] / tiempoTotal * 100):F2}%");
-                resumen.AppendLine($"Fogata: {(colliderTotalLookTimes["Fogata"] / tiempoTotal * 100):F2}%");
-                resumen.AppendLine($"Respiración: {(colliderTotalLookTimes["Respiracion"] / tiempoTotal * 100):F2}%");
-                resumen.AppendLine($"Sin foco específico: {(colliderTotalLookTimes["Ninguno"] / tiempoTotal * 100):F2}%");
+                jsonBuilder.AppendLine("    \"porcentajes\": {");
+                jsonBuilder.AppendLine("      \"arbol\": " + (colliderTotalLookTimes["Arbol"] / tiempoTotal * 100).ToString("F2", invCulture) + ",");
+                jsonBuilder.AppendLine("      \"caja\": " + (colliderTotalLookTimes["Caja"] / tiempoTotal * 100).ToString("F2", invCulture) + ",");
+                jsonBuilder.AppendLine("      \"fogata\": " + (colliderTotalLookTimes["Fogata"] / tiempoTotal * 100).ToString("F2", invCulture) + ",");
+                jsonBuilder.AppendLine("      \"respiracion\": " + (colliderTotalLookTimes["Respiracion"] / tiempoTotal * 100).ToString("F2", invCulture) + ",");
+                jsonBuilder.AppendLine("      \"sinFoco\": " + (colliderTotalLookTimes["Ninguno"] / tiempoTotal * 100).ToString("F2", invCulture));
+                jsonBuilder.AppendLine("    }");
             }
-
-            // Resumen Caja
-            resumen.AppendLine("\nCAJA:");
-            resumen.AppendLine($"Caja abierta: {cajaAbierta}");
-            if (cajaAbierta)
+            else
             {
-                resumen.AppendLine($"Tiempo hasta abrir la caja: {tiempoAperturaCaja} segundos");
+                jsonBuilder.AppendLine("    \"porcentajes\": {}");
             }
+            jsonBuilder.AppendLine("  },");
 
-            // Resumen Fogata
-            resumen.AppendLine("\nFOGATA:");
-            resumen.AppendLine($"Piedras colocadas: {piedrasColocadas}/4");
+            // Información de la caja
+            jsonBuilder.AppendLine("  \"caja\": {");
+            jsonBuilder.AppendLine("    \"abierta\": " + cajaAbierta.ToString().ToLower() +
+                (cajaAbierta ? ",\n    \"tiempoApertura\": " + tiempoAperturaCaja.ToString("F2", invCulture) : ""));
+            jsonBuilder.AppendLine("  },");
+
+            // Información de la fogata
+            jsonBuilder.AppendLine("  \"fogata\": {");
+            jsonBuilder.AppendLine("    \"piedrasColocadas\": " + piedrasColocadas + ",");
             if (piedrasColocadas > 0)
             {
-                resumen.AppendLine($"Tiempo hasta primera piedra: {tiempoPrimeraPiedra} segundos");
+                jsonBuilder.AppendLine("    \"tiempoPrimeraPiedra\": " + tiempoPrimeraPiedra.ToString("F2", invCulture) + ",");
             }
             if (piedrasColocadas == 4)
             {
-                resumen.AppendLine($"Tiempo para completar todas las piedras desde la primera: {tiempoTodasPiedras} segundos");
+                jsonBuilder.AppendLine("    \"tiempoTodasPiedras\": " + tiempoTodasPiedras.ToString("F2", invCulture) + ",");
             }
-            resumen.AppendLine($"Veces encendida la fogata: {vecesEncendida}");
-            resumen.AppendLine($"Veces apagada la fogata: {vecesApagada}");
+            jsonBuilder.AppendLine("    \"vecesEncendida\": " + vecesEncendida + ",");
+            jsonBuilder.AppendLine("    \"vecesApagada\": " + vecesApagada);
+            jsonBuilder.AppendLine("  },");
 
-            // Resumen Hojas
-            resumen.AppendLine("\nHOJAS:");
-            resumen.AppendLine($"Hojas manipuladas: {hojasAgarradas}");
+            // Información de las hojas
+            jsonBuilder.AppendLine("  \"hojas\": {");
+            jsonBuilder.AppendLine("    \"manipuladas\": " + hojasAgarradas);
             if (hojasAgarradas > 0)
             {
-                resumen.AppendLine($"Tiempo hasta primera hoja: {tiempoPrimeraHoja} segundos");
-                resumen.AppendLine($"Tiempo promedio de interacción con hoja: {tiempoPromedioInteraccionHojas} segundos");
+                jsonBuilder.AppendLine("    ,\"tiempoPrimeraHoja\": " + tiempoPrimeraHoja.ToString("F2", invCulture) + ",");
+                jsonBuilder.AppendLine("    \"tiempoPromedioInteraccion\": " + tiempoPromedioInteraccionHojas.ToString("F2", invCulture));
             }
+            jsonBuilder.AppendLine("  },");
 
-            // Resumen Botones de Fin
-            resumen.AppendLine("\nCIERRE DE EXPERIENCIA:");
+            // Información de cierre de experiencia
+            jsonBuilder.AppendLine("  \"cierreExperiencia\": {");
             if (primerFinActivado)
             {
-                resumen.AppendLine($"Tiempo hasta primer botón de fin: {tiempoPrimerFin} segundos");
+                jsonBuilder.AppendLine("    \"tiempoPrimerFin\": " + tiempoPrimerFin.ToString("F2", invCulture));
 
                 if (tiempoSegundoFin > 0f)
                 {
-                    resumen.AppendLine($"Tiempo hasta segundo botón de fin: {tiempoSegundoFin} segundos");
-                    resumen.AppendLine($"Tiempo entre primer y segundo fin: {tiempoEntreFines} segundos");
-                }
-                else
-                {
-                    resumen.AppendLine("El segundo botón de fin no fue activado");
+                    jsonBuilder.AppendLine("    ,\"tiempoSegundoFin\": " + tiempoSegundoFin.ToString("F2", invCulture) + ",");
+                    jsonBuilder.AppendLine("    \"tiempoEntreFines\": " + tiempoEntreFines.ToString("F2", invCulture));
                 }
             }
             else
             {
-                resumen.AppendLine("Ningún botón de fin fue activado (la aplicación se cerró de otra manera)");
+                jsonBuilder.AppendLine("    \"notificacion\": \"Ningún botón de fin fue activado (la aplicación se cerró de otra manera)\"");
             }
+            jsonBuilder.AppendLine("  },");
 
-            // Resumen de botones de audio
-            resumen.AppendLine("\nBOTONES DE AUDIO:");
+            // Información de botones de audio
+            jsonBuilder.AppendLine("  \"botonesAudio\": {");
 
             if (audioHojasActivado || audioFogataActivado || audioRespiracionActivado || audioArbolActivado)
             {
-                resumen.AppendLine($"Primer audio activado: {nombrePrimerAudio} a los {tiempoPrimerAudio} segundos");
+                jsonBuilder.AppendLine("    \"primerAudio\": {");
+                jsonBuilder.AppendLine("      \"nombre\": \"" + nombrePrimerAudio + "\",");
+                jsonBuilder.AppendLine("      \"tiempo\": " + tiempoPrimerAudio.ToString("F2", invCulture));
+                jsonBuilder.AppendLine("    },");
 
-                resumen.AppendLine("\nAudio Hojas:");
-                resumen.AppendLine($"  Veces activado: {vecesAudioHojas}");
+                // Audio Hojas
+                jsonBuilder.AppendLine("    \"audioHojas\": {");
+                jsonBuilder.AppendLine("      \"vecesActivado\": " + vecesAudioHojas);
                 if (vecesAudioHojas > 0)
                 {
-                    resumen.AppendLine($"  Tiempos de activación (segundos): {String.Join(", ", tiemposAudioHojas)}");
+                    jsonBuilder.Append("      ,\"tiemposActivacion\": [");
+                    for (int i = 0; i < tiemposAudioHojas.Count; i++)
+                    {
+                        jsonBuilder.Append(tiemposAudioHojas[i].ToString("F2", invCulture));
+                        if (i < tiemposAudioHojas.Count - 1)
+                            jsonBuilder.Append(", ");
+                    }
+                    jsonBuilder.AppendLine("]");
                 }
+                jsonBuilder.AppendLine("    },");
 
-                resumen.AppendLine("\nAudio Fogata:");
-                resumen.AppendLine($"  Veces activado: {vecesAudioFogata}");
+                // Audio Fogata
+                jsonBuilder.AppendLine("    \"audioFogata\": {");
+                jsonBuilder.AppendLine("      \"vecesActivado\": " + vecesAudioFogata);
                 if (vecesAudioFogata > 0)
                 {
-                    resumen.AppendLine($"  Tiempos de activación (segundos): {String.Join(", ", tiemposAudioFogata)}");
+                    jsonBuilder.Append("      ,\"tiemposActivacion\": [");
+                    for (int i = 0; i < tiemposAudioFogata.Count; i++)
+                    {
+                        jsonBuilder.Append(tiemposAudioFogata[i].ToString("F2", invCulture));
+                        if (i < tiemposAudioFogata.Count - 1)
+                            jsonBuilder.Append(", ");
+                    }
+                    jsonBuilder.AppendLine("]");
                 }
+                jsonBuilder.AppendLine("    },");
 
-                resumen.AppendLine("\nAudio Respiración:");
-                resumen.AppendLine($"  Veces activado: {vecesAudioRespiracion}");
+                // Audio Respiración
+                jsonBuilder.AppendLine("    \"audioRespiracion\": {");
+                jsonBuilder.AppendLine("      \"vecesActivado\": " + vecesAudioRespiracion);
                 if (vecesAudioRespiracion > 0)
                 {
-                    resumen.AppendLine($"  Tiempos de activación (segundos): {String.Join(", ", tiemposAudioRespiracion)}");
+                    jsonBuilder.Append("      ,\"tiemposActivacion\": [");
+                    for (int i = 0; i < tiemposAudioRespiracion.Count; i++)
+                    {
+                        jsonBuilder.Append(tiemposAudioRespiracion[i].ToString("F2", invCulture));
+                        if (i < tiemposAudioRespiracion.Count - 1)
+                            jsonBuilder.Append(", ");
+                    }
+                    jsonBuilder.AppendLine("]");
                 }
+                jsonBuilder.AppendLine("    },");
 
-                resumen.AppendLine("\nAudio Árbol:");
-                resumen.AppendLine($"  Veces activado: {vecesAudioArbol}");
+                // Audio Árbol
+                jsonBuilder.AppendLine("    \"audioArbol\": {");
+                jsonBuilder.AppendLine("      \"vecesActivado\": " + vecesAudioArbol);
                 if (vecesAudioArbol > 0)
                 {
-                    resumen.AppendLine($"  Tiempos de activación (segundos): {String.Join(", ", tiemposAudioArbol)}");
+                    jsonBuilder.Append("      ,\"tiemposActivacion\": [");
+                    for (int i = 0; i < tiemposAudioArbol.Count; i++)
+                    {
+                        jsonBuilder.Append(tiemposAudioArbol[i].ToString("F2", invCulture));
+                        if (i < tiemposAudioArbol.Count - 1)
+                            jsonBuilder.Append(", ");
+                    }
+                    jsonBuilder.AppendLine("]");
                 }
+                jsonBuilder.AppendLine("    },");
 
-                // Determinar secuencia de activación de audios
-                resumen.AppendLine("\nSecuencia de audio según primer uso:");
+                // Secuencia de activación de audios
+                jsonBuilder.AppendLine("    \"secuenciaAudio\": [");
                 List<KeyValuePair<string, float>> secuencia = new List<KeyValuePair<string, float>>();
 
                 if (audioHojasActivado && tiemposAudioHojas.Count > 0)
@@ -580,41 +722,117 @@ public class TelemetriaManager : MonoBehaviour
 
                 for (int i = 0; i < secuencia.Count; i++)
                 {
-                    resumen.AppendLine($"  {i + 1}. Audio {secuencia[i].Key} a los {secuencia[i].Value} segundos");
+                    jsonBuilder.AppendLine("      {");
+                    jsonBuilder.AppendLine("        \"posicion\": " + (i + 1) + ",");
+                    jsonBuilder.AppendLine("        \"audio\": \"" + secuencia[i].Key + "\",");
+                    jsonBuilder.AppendLine("        \"tiempo\": " + secuencia[i].Value.ToString("F2", invCulture));
+                    jsonBuilder.Append("      }");
+                    if (i < secuencia.Count - 1)
+                        jsonBuilder.AppendLine(",");
+                    else
+                        jsonBuilder.AppendLine("");
                 }
+                jsonBuilder.AppendLine("    ]");
             }
             else
             {
-                resumen.AppendLine("No se activó ningún audio de instrucciones");
+                jsonBuilder.AppendLine("    \"notificacion\": \"No se activó ningún audio de instrucciones\"");
+            }
+            jsonBuilder.AppendLine("  }");
+
+            // Cerrar el objeto JSON
+            jsonBuilder.AppendLine("}");
+
+            // Antes de guardar el archivo, asegúrate de que el directorio exista
+            string directory = Path.Combine(Application.persistentDataPath, "Logs");
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+                Debug.Log($"Creando directorio para resumen: {directory}");
             }
 
-            // Guardar resumen
-            Log("RESUMEN", resumen.ToString());
+            // Registrar el resumen en los logs (pero sin incluirlo completo, solo una referencia)
+            Log("RESUMEN_GENERADO", "Resumen en formato JSON generado");
             SaveLogBuffer();
 
-            // Incluir el nombre del dispositivo y el código de usuario en el nombre del archivo de resumen
-            string deviceNameSafe = deviceName.Replace(" ", "_").Replace(":", "").Replace("/", "");
-            if (deviceNameSafe.Length > 20) deviceNameSafe = deviceNameSafe.Substring(0, 20);
-
-            string codigoSeguro = "";
-            if (!string.IsNullOrEmpty(codigoUsuario))
-            {
-                codigoSeguro = codigoUsuario.Replace(" ", "_").Replace(":", "").Replace("/", "");
-                if (codigoSeguro.Length > 20) codigoSeguro = codigoSeguro.Substring(0, 20);
-            }
-
-            // Guardar archivo separado de resumen para consulta más fácil
+            // Generar el nombre del archivo usando el mismo ID que los logs
             string summaryPath = Path.Combine(
-                Application.persistentDataPath,
-                "Logs",
-                $"resumen_{deviceNameSafe}_{codigoSeguro}_{DateTime.Now.ToString("yyyyMMdd_HHmmss")}.txt");
+                directory,
+                $"resumen_{experienciaCompleta}_{DateTime.Now.ToString("yyyyMMdd_HHmmss")}.json");
 
-            File.WriteAllText(summaryPath, resumen.ToString());
-            Debug.Log($"Resumen guardado en: {summaryPath}");
+            // Guardar el archivo JSON
+            File.WriteAllText(summaryPath, jsonBuilder.ToString());
+            Debug.Log($"Resumen en formato JSON guardado en: {summaryPath}");
         }
         catch (Exception e)
         {
-            Debug.LogError($"Error al generar resumen: {e.Message}");
+            Debug.LogError($"Error al generar resumen JSON: {e.Message}\n{e.StackTrace}");
+
+            // Intentar guardar en una ubicación alternativa en caso de error
+            try
+            {
+                string emergencyPath = Path.Combine(
+                    Application.persistentDataPath,
+                    $"emergency_resumen_{DateTime.Now.ToString("yyyyMMdd_HHmmss")}.json");
+
+                File.WriteAllText(emergencyPath, "[ERROR] No se pudo generar el resumen completo.");
+                Debug.LogWarning($"Se intentó guardar un resumen de emergencia en: {emergencyPath}");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Error también al guardar resumen de emergencia: {ex.Message}");
+            }
+        }
+    }
+
+    public void GenerarYGuardarResumen()
+    {
+        try
+        {
+            GuardarResumen();
+            Debug.Log("Resumen JSON generado manualmente");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error al generar el resumen manualmente: {e.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Registra el código del usuario y actualiza el ID de la experiencia
+    /// </summary>
+    /// <param name="codigo">Código del usuario</param>
+    public void RegistrarCodigoUsuario(string codigo)
+    {
+        try
+        {
+            // Si el código es válido, registrarlo
+            if (!string.IsNullOrEmpty(codigo))
+            {
+                codigoUsuario = codigo;
+
+                // Actualizar el ID completo de la experiencia
+                string antiguoID = experienciaCompleta;
+                experienciaCompleta = $"{equipoID}{experienciaID}{codigoUsuario}";
+
+                // Registrar el evento
+                Log("CODIGO_USUARIO", codigoUsuario);
+                Log("EXPERIENCIA_ID_ACTUALIZADA", $"Anterior: {antiguoID}, Nueva: {experienciaCompleta}");
+
+                Debug.Log($"Código de usuario registrado: {codigoUsuario}");
+                Debug.Log($"ID de experiencia actualizado: {experienciaCompleta}");
+
+                // Guardar inmediatamente
+                SaveLogBuffer();
+            }
+            else
+            {
+                Debug.LogWarning("Se intentó registrar un código de usuario vacío");
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error al registrar código de usuario: {e.Message}");
         }
     }
 
@@ -806,9 +1024,20 @@ public class TelemetriaManager : MonoBehaviour
                     Log("SEGUNDO_FIN", $"Tiempo: {tiempoSegundoFin}, AVISO: Registrado inmediatamente después del primer fin");
                 }
 
-                // Guardar todo inmediatamente y generar el resumen
+                // Guardar todo inmediatamente
                 SaveLogBuffer();
-                GuardarResumen();
+
+                // Generar un resumen una vez que se haya registrado el segundo fin
+                // Esto permite capturar todos los datos de la experiencia
+                try
+                {
+                    GuardarResumen();
+                    Debug.Log("Resumen JSON generado después del segundo fin");
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"Error al generar el resumen después del segundo fin: {ex.Message}");
+                }
             }
         }
         catch (Exception e)
@@ -965,75 +1194,6 @@ public class TelemetriaManager : MonoBehaviour
         catch (Exception e)
         {
             Debug.LogError($"Error en RegistrarEvento: {e.Message}");
-        }
-    }
-
-    /// <summary>
-    /// Guarda el código de usuario actual del texto asignado
-    /// Esta función debe ser llamada desde otro script cuando el usuario haya ingresado su código
-    /// </summary>
-    public void CodigoGuardado(string codigo)
-    {
-        try
-        {
-            // Obtener el texto del código
-            codigoUsuario = codigo.Trim();
-
-            // Registrar en la telemetría
-            if (!string.IsNullOrEmpty(codigoUsuario))
-            {
-                RegistrarEvento("CODIGO_USUARIO", codigoUsuario);
-                Debug.Log($"Código de usuario guardado: {codigoUsuario}");
-            }
-            else
-            {
-                RegistrarEvento("CODIGO_USUARIO", "No especificado");
-                Debug.LogWarning("El código de usuario está vacío");
-            }
-
-            // Guardar inmediatamente
-            SaveLogBuffer();
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"Error al guardar código de usuario: {e.Message}");
-        }
-    }
-
-    /// <summary>
-    /// Método para asegurar que el código del usuario se incluya en el resumen final
-    /// incluso si se establece después de que se haya detenido la recolección de datos.
-    /// </summary>
-    public void AsegurarCodigoEnResumen(string codigo)
-    {
-        // Si ya tenemos el código, no hacer nada
-        if (!string.IsNullOrEmpty(codigoUsuario) && codigoUsuario == codigo)
-        {
-            return;
-        }
-
-        // Establecer el código directamente en la variable
-        codigoUsuario = codigo;
-
-        // Registrar el código aunque la recolección de datos esté detenida
-        try
-        {
-            // Intentar registrar el evento sin importar el estado de isLogReady
-            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-            float tiempoTranscurrido = Time.time - startTime;
-            string logEntry = $"{timestamp},{tiempoTranscurrido},CODIGO_USUARIO_FINAL,{codigo}\n";
-
-            // Añadir directamente al buffer
-            logBuffer.Append(logEntry);
-
-            // Forzar guardado
-            SaveLogBuffer();
-
-            Debug.Log($"[TELEMETRÍA] Código de usuario final registrado: {codigo}");
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"Error al registrar código de usuario final: {e.Message}");
         }
     }
 }
