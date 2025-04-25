@@ -37,6 +37,13 @@ public class TelemetriaManager : MonoBehaviour
     [Tooltip("Collider de la respiración")]
     public Transform respiracionCollider;
 
+    // Información del dispositivo
+    private string deviceName = "Desconocido";
+
+
+    // Variable para almacenar el código del usuario una vez guardado
+    private string codigoUsuario = "";
+
     private string logFilePath;
     private StringBuilder logBuffer = new StringBuilder();
     private float startTime;
@@ -114,6 +121,9 @@ public class TelemetriaManager : MonoBehaviour
         _instance = this;
         DontDestroyOnLoad(this.gameObject);
 
+        // Obtener el nombre del dispositivo
+        ObtenerDeviceName();
+
         // Crear el archivo de log
         CreateLogFile();
 
@@ -124,11 +134,31 @@ public class TelemetriaManager : MonoBehaviour
         ValidarColliders();
     }
 
+    /// <summary>
+    /// Obtiene el nombre del dispositivo utilizando SystemInfo
+    /// </summary>
+    private void ObtenerDeviceName()
+    {
+        try
+        {
+            deviceName = SystemInfo.deviceName;
+            Debug.Log($"Nombre del dispositivo obtenido: {deviceName}");
+
+            // Registrar el nombre del dispositivo para telemetría
+            RegistrarEvento("DEVICE_NAME", deviceName);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error al obtener nombre del dispositivo: {e.Message}");
+            deviceName = "Error_" + SystemInfo.deviceType.ToString();
+        }
+    }
+
     void Start()
     {
         startTime = Time.time;
         lastGazeLogTime = Time.time; // Inicializar el tiempo del último registro de mirada
-        Log("INICIO_APLICACION", "");
+        Log("INICIO_APLICACION", $"Dispositivo: {deviceName}");
         isLogReady = true; // Marcar que estamos listos para registrar eventos
         Debug.Log("TelemetriaManager: isLogReady = true");
 
@@ -270,7 +300,11 @@ public class TelemetriaManager : MonoBehaviour
             Directory.CreateDirectory(directory);
         }
 
-        logFilePath = Path.Combine(directory, $"log_{timestamp}.txt");
+        // Incluir el nombre del dispositivo en el nombre del archivo
+        string deviceNameSafe = deviceName.Replace(" ", "_").Replace(":", "").Replace("/", "");
+        if (deviceNameSafe.Length > 20) deviceNameSafe = deviceNameSafe.Substring(0, 20);
+
+        logFilePath = Path.Combine(directory, $"log_{deviceNameSafe}_{timestamp}.txt");
 
         try
         {
@@ -403,6 +437,20 @@ public class TelemetriaManager : MonoBehaviour
 
             StringBuilder resumen = new StringBuilder();
             resumen.AppendLine("RESUMEN DE LA EXPERIENCIA");
+
+            // Añadir información del dispositivo al resumen
+            resumen.AppendLine($"Dispositivo: {deviceName}");
+
+            // Añadir código de usuario al resumen
+            if (!string.IsNullOrEmpty(codigoUsuario))
+            {
+                resumen.AppendLine($"Código de usuario: {codigoUsuario}");
+            }
+            else
+            {
+                resumen.AppendLine("Código de usuario: No especificado");
+            }
+
             resumen.AppendLine($"Tiempo total de experiencia: {Time.time - startTime} segundos");
 
             // Resumen de atención del usuario
@@ -544,11 +592,22 @@ public class TelemetriaManager : MonoBehaviour
             Log("RESUMEN", resumen.ToString());
             SaveLogBuffer();
 
+            // Incluir el nombre del dispositivo y el código de usuario en el nombre del archivo de resumen
+            string deviceNameSafe = deviceName.Replace(" ", "_").Replace(":", "").Replace("/", "");
+            if (deviceNameSafe.Length > 20) deviceNameSafe = deviceNameSafe.Substring(0, 20);
+
+            string codigoSeguro = "";
+            if (!string.IsNullOrEmpty(codigoUsuario))
+            {
+                codigoSeguro = codigoUsuario.Replace(" ", "_").Replace(":", "").Replace("/", "");
+                if (codigoSeguro.Length > 20) codigoSeguro = codigoSeguro.Substring(0, 20);
+            }
+
             // Guardar archivo separado de resumen para consulta más fácil
             string summaryPath = Path.Combine(
                 Application.persistentDataPath,
                 "Logs",
-                $"resumen_{DateTime.Now.ToString("yyyyMMdd_HHmmss")}.txt");
+                $"resumen_{deviceNameSafe}_{codigoSeguro}_{DateTime.Now.ToString("yyyyMMdd_HHmmss")}.txt");
 
             File.WriteAllText(summaryPath, resumen.ToString());
             Debug.Log($"Resumen guardado en: {summaryPath}");
@@ -906,6 +965,75 @@ public class TelemetriaManager : MonoBehaviour
         catch (Exception e)
         {
             Debug.LogError($"Error en RegistrarEvento: {e.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Guarda el código de usuario actual del texto asignado
+    /// Esta función debe ser llamada desde otro script cuando el usuario haya ingresado su código
+    /// </summary>
+    public void CodigoGuardado(string codigo)
+    {
+        try
+        {
+            // Obtener el texto del código
+            codigoUsuario = codigo.Trim();
+
+            // Registrar en la telemetría
+            if (!string.IsNullOrEmpty(codigoUsuario))
+            {
+                RegistrarEvento("CODIGO_USUARIO", codigoUsuario);
+                Debug.Log($"Código de usuario guardado: {codigoUsuario}");
+            }
+            else
+            {
+                RegistrarEvento("CODIGO_USUARIO", "No especificado");
+                Debug.LogWarning("El código de usuario está vacío");
+            }
+
+            // Guardar inmediatamente
+            SaveLogBuffer();
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error al guardar código de usuario: {e.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Método para asegurar que el código del usuario se incluya en el resumen final
+    /// incluso si se establece después de que se haya detenido la recolección de datos.
+    /// </summary>
+    public void AsegurarCodigoEnResumen(string codigo)
+    {
+        // Si ya tenemos el código, no hacer nada
+        if (!string.IsNullOrEmpty(codigoUsuario) && codigoUsuario == codigo)
+        {
+            return;
+        }
+
+        // Establecer el código directamente en la variable
+        codigoUsuario = codigo;
+
+        // Registrar el código aunque la recolección de datos esté detenida
+        try
+        {
+            // Intentar registrar el evento sin importar el estado de isLogReady
+            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            float tiempoTranscurrido = Time.time - startTime;
+            string logEntry = $"{timestamp},{tiempoTranscurrido},CODIGO_USUARIO_FINAL,{codigo}\n";
+
+            // Añadir directamente al buffer
+            logBuffer.Append(logEntry);
+
+            // Forzar guardado
+            SaveLogBuffer();
+
+            Debug.Log($"[TELEMETRÍA] Código de usuario final registrado: {codigo}");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error al registrar código de usuario final: {e.Message}");
         }
     }
 }
