@@ -68,7 +68,7 @@ public class SceneController : MonoBehaviour
         {
             // Registrar el cambio de escena
             telemetriaManager.RegistrarEvento("CAMBIO_ESCENA", $"Cambio a: {sceneName}");
-            telemetriaManager.ForzarGuardado();
+            //telemetriaManager.ForzarGuardado();
         }
         else
         {

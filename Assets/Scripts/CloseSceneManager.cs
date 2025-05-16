@@ -110,7 +110,7 @@ public class CloseSceneManager : MonoBehaviour
 
             // Registrar evento de cierre
             telemetriaManager.RegistrarEvento("CIERRE_APLICACION", "El usuario cerró la aplicación desde el botón");
-            telemetriaManager.ForzarGuardado();
+            //telemetriaManager.ForzarGuardado();
         }
 
         // Esperar un momento para asegurar que los datos se guarden

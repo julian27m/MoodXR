@@ -12,6 +12,8 @@ public class CloseSceneController : MonoBehaviour
     // Referencia al TelemetriaManager
     private TelemetriaManager telemetriaManager;
 
+    private bool codigoYaGuardado = false;
+
     private void Awake()
     {
         
@@ -34,6 +36,11 @@ public class CloseSceneController : MonoBehaviour
     /// </summary>
     public void GuardarCodigo()
     {
+        if (codigoYaGuardado)
+        {
+            Debug.Log("El código ya ha sido guardado previamente. Ignorando llamada duplicada.");
+            return;
+        }
         // Verificar que tengamos el input field
         if (txtCodigoUsuario == null)
         {
@@ -58,10 +65,15 @@ public class CloseSceneController : MonoBehaviour
             telemetriaManager.RegistrarCodigoUsuario(codigo);
             telemetriaManager.RegistrarEvento("CODIGO_USUARIO_GUARDADO", $"Código: {codigo}");
 
+            // Logging adicional para depuración
+            Debug.Log($"GuardarCodigo - Código a registrar: '{codigo}'");
+
             // Generar un resumen actualizado que incluya el código del usuario
             telemetriaManager.GenerarYGuardarResumen();
 
             Debug.Log($"Código de usuario guardado: {codigo} y resumen generado");
+
+            codigoYaGuardado = true;
         }
         else
         {

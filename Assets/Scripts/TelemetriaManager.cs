@@ -46,8 +46,8 @@ public class TelemetriaManager : MonoBehaviour
 
     // Variables para identificación
     private string experienciaID = "";
-    private string codigoUsuario = "00"; // Valor por defecto
-    private string experienciaCompleta = "";
+    private string codigoUsuario = ""; // Valor por defecto vacío
+    private string experienciaBasica = ""; // Sin código de usuario
 
     private string logFilePath;
     private StringBuilder logBuffer = new StringBuilder();
@@ -117,6 +117,12 @@ public class TelemetriaManager : MonoBehaviour
     private List<float> tiemposAudioRespiracion = new List<float>();
     private List<float> tiemposAudioArbol = new List<float>();
 
+    private bool resumenGuardadoConCodigo = false;
+
+
+    // Referencia al EncryptionManager
+    private EncryptionManager encryptionManager;
+
     private void Awake()
     {
         // Singleton pattern
@@ -135,18 +141,28 @@ public class TelemetriaManager : MonoBehaviour
         // Obtener el ID de la experiencia
         GenerarExperienciaID();
 
-        // Generar el ID completo de la experiencia (sin código de usuario todavía)
-        experienciaCompleta = $"{equipoID}{experienciaID}00";
+        // Generar el ID básico de la experiencia (sin código de usuario)
+        experienciaBasica = $"{equipoID}{experienciaID}";
 
         // Obtener el nombre del dispositivo
         ObtenerDeviceName();
 
-        // Crear el archivo de log
-        CreateLogFile();
+        // Crear el archivo de log en memoria (ahora solo crearemos un buffer en memoria)
+        PreparaLog();
+
+        // Buscar o crear el EncryptionManager
+        encryptionManager = FindObjectOfType<EncryptionManager>();
+        if (encryptionManager == null)
+        {
+            GameObject encryptionObj = new GameObject("EncryptionManager");
+            encryptionManager = encryptionObj.AddComponent<EncryptionManager>();
+            DontDestroyOnLoad(encryptionObj);
+            Debug.Log("EncryptionManager creado automáticamente");
+        }
 
         // Debug info
         Debug.Log("TelemetriaManager inicializado");
-        Debug.Log($"ID de Experiencia: {experienciaCompleta}");
+        Debug.Log($"ID básico de Experiencia: {experienciaBasica}");
 
         // Verificar que tengamos los colliders necesarios
         ValidarColliders();
@@ -183,7 +199,7 @@ public class TelemetriaManager : MonoBehaviour
                 // Tomar solo los primeros 8 caracteres para mantenerlo corto
                 string shortDeviceID = deviceID.Length > 8 ? deviceID.Substring(0, 8) : deviceID;
 
-                // Generar un ID de 2 dígitos para el equipo (puedes modificar esto según tus necesidades)
+                // Generar un ID de 2 dígitos para el equipo
                 System.Random random = new System.Random();
                 equipoID = random.Next(1, 100).ToString("00");
 
@@ -247,7 +263,7 @@ public class TelemetriaManager : MonoBehaviour
 
             // Registrar el nombre del dispositivo para telemetría
             RegistrarEvento("DEVICE_NAME", deviceName);
-            RegistrarEvento("EXPERIENCIA_ID", experienciaCompleta);
+            RegistrarEvento("EXPERIENCIA_ID", experienciaBasica);
         }
         catch (Exception e)
         {
@@ -260,7 +276,7 @@ public class TelemetriaManager : MonoBehaviour
     {
         startTime = Time.time;
         lastGazeLogTime = Time.time; // Inicializar el tiempo del último registro de mirada
-        Log("INICIO_APLICACION", $"Dispositivo: {deviceName}, ID Experiencia: {experienciaCompleta}");
+        Log("INICIO_APLICACION", $"Dispositivo: {deviceName}, ID Experiencia: {experienciaBasica}");
         isLogReady = true; // Marcar que estamos listos para registrar eventos
         Debug.Log("TelemetriaManager: isLogReady = true");
 
@@ -270,14 +286,6 @@ public class TelemetriaManager : MonoBehaviour
 
     void Update()
     {
-        // Guardar periódicamente los logs para evitar pérdida de datos
-        if (isLogReady && Time.time - lastSaveTime > saveInterval)
-        {
-            lastSaveTime = Time.time;
-            SaveLogBuffer();
-            Debug.Log("Guardado periódico de telemetría");
-        }
-
         // Verificar continuamente hacia dónde está mirando el usuario
         VerificarMirada();
     }
@@ -391,36 +399,11 @@ public class TelemetriaManager : MonoBehaviour
         return dotView >= alignmentThreshold;
     }
 
-    private void CreateLogFile()
+    private void PreparaLog()
     {
-        string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-        string directory = Path.Combine(Application.persistentDataPath, "Logs");
-
-        // Crear el directorio si no existe
-        if (!Directory.Exists(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
-
-        // Incluir el ID de la experiencia en el nombre del archivo
-        logFilePath = Path.Combine(directory, $"log_{experienciaCompleta}_{timestamp}.txt");
-
-        try
-        {
-            // Escribir encabezado del archivo
-            using (StreamWriter writer = new StreamWriter(logFilePath, false))
-            {
-                writer.WriteLine("Timestamp,TiempoDesdeInicio,Evento,Datos");
-                writer.Flush();
-            }
-
-            isLogFileCreated = true;
-            Debug.Log($"Archivo de telemetría creado en: {logFilePath}");
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"Error al crear archivo de telemetría: {e.Message}");
-        }
+        // Ya no creamos un archivo, solo preparamos el buffer en memoria
+        isLogFileCreated = true;
+        Debug.Log("Buffer de telemetría en memoria preparado");
     }
 
     private void Log(string evento, string datos)
@@ -433,12 +416,6 @@ public class TelemetriaManager : MonoBehaviour
             string logEntry = $"{timestamp},{tiempoTranscurrido},{evento},{datos}\n";
             logBuffer.Append(logEntry);
 
-            // Guardar en el archivo cada cierto tiempo o cantidad de entradas
-            if (logBuffer.Length > 500) // Reducido para guardar más frecuentemente
-            {
-                SaveLogBuffer();
-            }
-
             Debug.Log($"[TELEMETRÍA] {evento}: {datos}");
         }
         catch (Exception e)
@@ -447,43 +424,7 @@ public class TelemetriaManager : MonoBehaviour
         }
     }
 
-    private void SaveLogBuffer()
-    {
-        if (!isLogFileCreated || logBuffer.Length == 0) return;
-
-        try
-        {
-            using (StreamWriter writer = new StreamWriter(logFilePath, true))
-            {
-                writer.Write(logBuffer.ToString());
-                writer.Flush();
-            }
-
-            string savedContent = logBuffer.ToString();
-            logBuffer.Clear();
-            Debug.Log($"Guardados {savedContent.Split('\n').Length - 1} registros de telemetría");
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"Error al guardar datos de telemetría: {e.Message}\n{e.StackTrace}");
-            try
-            {
-                // Intento alternativo de guardado
-                string emergencyPath = Path.Combine(Application.persistentDataPath, $"emergency_log_{DateTime.Now:yyyyMMdd_HHmmss}.txt");
-                File.WriteAllText(emergencyPath, logBuffer.ToString());
-                Debug.Log($"Guardado de emergencia realizado en: {emergencyPath}");
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Error en guardado de emergencia: {ex.Message}");
-            }
-        }
-    }
-
-    public void ForzarGuardado()
-    {
-        SaveLogBuffer();
-    }
+    
 
     private void OnApplicationQuit()
     {
@@ -509,13 +450,20 @@ public class TelemetriaManager : MonoBehaviour
 
         // Asegurarse de guardar todos los datos antes de cerrar
         Log("FIN_APLICACION", $"Tiempo total: {Time.time - startTime}");
-        SaveLogBuffer();
 
         try
         {
-            // Generar resumen y forzar su guardado
-            GuardarResumen();
-            Debug.Log("Resumen JSON generado en OnApplicationQuit");
+            // Solo generar el resumen final si aún no hemos guardado uno con código de usuario
+            if (!resumenGuardadoConCodigo)
+            {
+                // Generar el archivo JSON final con el resumen
+                GuardarResumen();
+                Debug.Log("Resumen JSON generado en OnApplicationQuit");
+            }
+            else
+            {
+                Debug.Log("No se generó resumen en OnApplicationQuit porque ya existía uno con código de usuario");
+            }
         }
         catch (Exception e)
         {
@@ -523,7 +471,7 @@ public class TelemetriaManager : MonoBehaviour
         }
     }
 
-    private void GuardarResumen()
+    public string GenerarJSONResumen()
     {
         try
         {
@@ -549,7 +497,26 @@ public class TelemetriaManager : MonoBehaviour
             System.Text.StringBuilder jsonBuilder = new System.Text.StringBuilder();
             jsonBuilder.AppendLine("{");
 
-            // Información general (sin incluir identificadores)
+            // Añadir el código del usuario al inicio del JSON
+            if (!string.IsNullOrEmpty(codigoUsuario))
+            {
+                // Cambio: Asegurarnos de que el código esté dentro de comillas si es un string
+                // Esto es importante para que sea un JSON válido
+                bool esNumero = int.TryParse(codigoUsuario, out _);
+
+                if (esNumero)
+                {
+                    // Si es un número, no necesita comillas
+                    jsonBuilder.AppendLine("  \"Código Uniandes\": " + codigoUsuario + ",");
+                }
+                else
+                {
+                    // Si es texto, necesita comillas
+                    jsonBuilder.AppendLine("  \"Código Uniandes\": \"" + codigoUsuario + "\",");
+                }
+            }
+
+            // Información general
             jsonBuilder.AppendLine("  \"dispositivo\": \"" + deviceName + "\",");
             jsonBuilder.AppendLine("  \"tiempoTotal\": " + (Time.time - startTime).ToString("F2", invCulture) + ",");
 
@@ -743,7 +710,26 @@ public class TelemetriaManager : MonoBehaviour
             // Cerrar el objeto JSON
             jsonBuilder.AppendLine("}");
 
-            // Antes de guardar el archivo, asegúrate de que el directorio exista
+            // Devolver el JSON como cadena
+            return jsonBuilder.ToString();
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error al generar JSON: {e.Message}\n{e.StackTrace}");
+
+            // Devolver un JSON de error básico pero válido
+            return "{ \"error\": \"Error generando datos de telemetría\", \"mensaje\": \"" + e.Message.Replace("\"", "'") + "\" }";
+        }
+    }
+
+    private void GuardarResumen()
+    {
+        try
+        {
+            // Generar el JSON
+            string jsonData = GenerarJSONResumen();
+
+            // Asegurarse de que el directorio exista
             string directory = Path.Combine(Application.persistentDataPath, "Logs");
             if (!Directory.Exists(directory))
             {
@@ -751,37 +737,61 @@ public class TelemetriaManager : MonoBehaviour
                 Debug.Log($"Creando directorio para resumen: {directory}");
             }
 
-            // Registrar el resumen en los logs (pero sin incluirlo completo, solo una referencia)
-            Log("RESUMEN_GENERADO", "Resumen en formato JSON generado");
-            SaveLogBuffer();
+            // Generar nombres de archivos
+            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            string encryptedPath = Path.Combine(directory, $"resumen_{equipoID}_{timestamp}.json");
 
-            // Generar el nombre del archivo usando el mismo ID que los logs
-            string summaryPath = Path.Combine(
-                directory,
-                $"resumen_{experienciaCompleta}_{DateTime.Now.ToString("yyyyMMdd_HHmmss")}.json");
+            // Intentar guardar versión encriptada usando EncryptionManager
+            bool encriptacionExitosa = false;
 
-            // Guardar el archivo JSON
-            File.WriteAllText(summaryPath, jsonBuilder.ToString());
-            Debug.Log($"Resumen en formato JSON guardado en: {summaryPath}");
+            if (encryptionManager != null)
+            {
+                try
+                {
+                    encriptacionExitosa = encryptionManager.GuardarJSONEncriptado(jsonData, encryptedPath);
+
+                    if (encriptacionExitosa)
+                    {
+                        Debug.Log($"Resumen encriptado guardado exitosamente en: {encryptedPath}");
+                        Log("RESUMEN_GUARDADO", $"Encriptado: {encriptacionExitosa}, Ruta: {encryptedPath}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"Error al encriptar con EncryptionManager: {ex.Message}");
+                    encriptacionExitosa = false;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("EncryptionManager no disponible, no se pudo encriptar");
+            }
+
+            // Si la encriptación falló o no hay EncryptionManager, guardar sin encriptar
+            if (!encriptacionExitosa)
+            {
+                string plainPath = Path.Combine(directory, $"plain_resumen_{equipoID}_{timestamp}.json");
+                File.WriteAllText(plainPath, jsonData);
+                Debug.Log($"Resumen sin encriptar guardado en: {plainPath}");
+                Log("RESUMEN_GUARDADO", $"Sin encriptar, Ruta: {plainPath}");
+            }
         }
         catch (Exception e)
         {
-            Debug.LogError($"Error al generar resumen JSON: {e.Message}\n{e.StackTrace}");
+            Debug.LogError($"Error al guardar resumen: {e.Message}\n{e.StackTrace}");
+            Log("ERROR_GUARDAR_RESUMEN", e.Message);
 
-            // Intentar guardar en una ubicación alternativa en caso de error
+            // Última opción: intentar guardar en una ubicación de emergencia
             try
             {
                 string emergencyPath = Path.Combine(
                     Application.persistentDataPath,
                     $"emergency_resumen_{DateTime.Now.ToString("yyyyMMdd_HHmmss")}.json");
 
-                File.WriteAllText(emergencyPath, "[ERROR] No se pudo generar el resumen completo.");
+                File.WriteAllText(emergencyPath, "{ \"error\": \"Error guardando resumen\" }");
                 Debug.LogWarning($"Se intentó guardar un resumen de emergencia en: {emergencyPath}");
             }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Error también al guardar resumen de emergencia: {ex.Message}");
-            }
+            catch { }
         }
     }
 
@@ -789,8 +799,25 @@ public class TelemetriaManager : MonoBehaviour
     {
         try
         {
+            // Si ya guardamos un resumen con código, no lo volvemos a hacer
+            if (resumenGuardadoConCodigo && !string.IsNullOrEmpty(codigoUsuario))
+            {
+                Debug.Log("No se generará un nuevo resumen porque ya existe uno con el código de usuario.");
+                return;
+            }
+
             GuardarResumen();
-            Debug.Log("Resumen JSON generado manualmente");
+
+            // Si tenemos código de usuario, marcar que ya se guardó
+            if (!string.IsNullOrEmpty(codigoUsuario))
+            {
+                resumenGuardadoConCodigo = true;
+                Debug.Log($"Resumen JSON generado con código de usuario: {codigoUsuario}");
+            }
+            else
+            {
+                Debug.Log("Resumen JSON generado sin código de usuario (código no registrado aún)");
+            }
         }
         catch (Exception e)
         {
@@ -809,21 +836,16 @@ public class TelemetriaManager : MonoBehaviour
             // Si el código es válido, registrarlo
             if (!string.IsNullOrEmpty(codigo))
             {
-                codigoUsuario = codigo;
-
-                // Actualizar el ID completo de la experiencia
-                string antiguoID = experienciaCompleta;
-                experienciaCompleta = $"{equipoID}{experienciaID}{codigoUsuario}";
+                codigoUsuario = codigo.Trim(); // Asegurarse de eliminar espacios en blanco
 
                 // Registrar el evento
                 Log("CODIGO_USUARIO", codigoUsuario);
-                Log("EXPERIENCIA_ID_ACTUALIZADA", $"Anterior: {antiguoID}, Nueva: {experienciaCompleta}");
+                Log("CODIGO_USUARIO_GUARDADO", $"Código: {codigoUsuario}");
 
                 Debug.Log($"Código de usuario registrado: {codigoUsuario}");
-                Debug.Log($"ID de experiencia actualizado: {experienciaCompleta}");
 
-                // Guardar inmediatamente
-                SaveLogBuffer();
+                // Resetear la bandera para que se genere un nuevo resumen con el código
+                resumenGuardadoConCodigo = false;
             }
             else
             {
@@ -848,7 +870,6 @@ public class TelemetriaManager : MonoBehaviour
                 cajaAbierta = true;
                 tiempoAperturaCaja = Time.time - startTime;
                 Log("CAJA_ABIERTA", $"Tiempo: {tiempoAperturaCaja}");
-                SaveLogBuffer(); // Guardar inmediatamente 
             }
         }
         catch (Exception e)
@@ -886,8 +907,6 @@ public class TelemetriaManager : MonoBehaviour
                     tiempoTodasPiedras = Time.time - startTime - tiempoPrimeraPiedra;
                     Log("TODAS_PIEDRAS", $"Tiempo desde primera piedra: {tiempoTodasPiedras}");
                 }
-
-                SaveLogBuffer(); // Guardar inmediatamente
             }
         }
         catch (Exception e)
@@ -904,7 +923,6 @@ public class TelemetriaManager : MonoBehaviour
 
             vecesEncendida++;
             Log("FOGATA_ENCENDIDA", $"Veces: {vecesEncendida}");
-            SaveLogBuffer(); // Guardar inmediatamente
         }
         catch (Exception e)
         {
@@ -920,7 +938,6 @@ public class TelemetriaManager : MonoBehaviour
 
             vecesApagada++;
             Log("FOGATA_APAGADA", $"Veces: {vecesApagada}");
-            SaveLogBuffer(); // Guardar inmediatamente
         }
         catch (Exception e)
         {
@@ -951,7 +968,6 @@ public class TelemetriaManager : MonoBehaviour
                 }
 
                 Log("HOJA_AGARRADA", $"Número: {hojasAgarradas}, InstanceID: {instanceID}, Tiempo: {tiempoActual}");
-                SaveLogBuffer(); // Guardar inmediatamente
             }
         }
         catch (Exception e)
@@ -969,7 +985,6 @@ public class TelemetriaManager : MonoBehaviour
             float tiempoActual = Time.time - startTime;
             tiemposSoltarHojas.Add(tiempoActual);
             Log("HOJA_SOLTADA", $"InstanceID: {instanceID}, Tiempo: {tiempoActual}");
-            SaveLogBuffer(); // Guardar inmediatamente
         }
         catch (Exception e)
         {
@@ -989,7 +1004,6 @@ public class TelemetriaManager : MonoBehaviour
                 primerFinActivado = true;
                 tiempoPrimerFin = Time.time - startTime;
                 Log("PRIMER_FIN", $"Tiempo: {tiempoPrimerFin}");
-                SaveLogBuffer(); // Guardar inmediatamente
             }
         }
         catch (Exception e)
@@ -1024,20 +1038,6 @@ public class TelemetriaManager : MonoBehaviour
                     Log("SEGUNDO_FIN", $"Tiempo: {tiempoSegundoFin}, AVISO: Registrado inmediatamente después del primer fin");
                 }
 
-                // Guardar todo inmediatamente
-                SaveLogBuffer();
-
-                // Generar un resumen una vez que se haya registrado el segundo fin
-                // Esto permite capturar todos los datos de la experiencia
-                try
-                {
-                    GuardarResumen();
-                    Debug.Log("Resumen JSON generado después del segundo fin");
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError($"Error al generar el resumen después del segundo fin: {ex.Message}");
-                }
             }
         }
         catch (Exception e)
@@ -1072,8 +1072,6 @@ public class TelemetriaManager : MonoBehaviour
                     Log("PRIMER_AUDIO", $"Audio Hojas, Tiempo: {tiempoActual}");
                 }
             }
-
-            SaveLogBuffer(); // Guardar inmediatamente
         }
         catch (Exception e)
         {
@@ -1106,8 +1104,6 @@ public class TelemetriaManager : MonoBehaviour
                     Log("PRIMER_AUDIO", $"Audio Fogata, Tiempo: {tiempoActual}");
                 }
             }
-
-            SaveLogBuffer(); // Guardar inmediatamente
         }
         catch (Exception e)
         {
@@ -1140,8 +1136,6 @@ public class TelemetriaManager : MonoBehaviour
                     Log("PRIMER_AUDIO", $"Audio Respiración, Tiempo: {tiempoActual}");
                 }
             }
-
-            SaveLogBuffer(); // Guardar inmediatamente
         }
         catch (Exception e)
         {
@@ -1174,8 +1168,6 @@ public class TelemetriaManager : MonoBehaviour
                     Log("PRIMER_AUDIO", $"Audio Árbol, Tiempo: {tiempoActual}");
                 }
             }
-
-            SaveLogBuffer(); // Guardar inmediatamente
         }
         catch (Exception e)
         {
@@ -1189,7 +1181,6 @@ public class TelemetriaManager : MonoBehaviour
         try
         {
             Log(nombreEvento, datos);
-            SaveLogBuffer(); // Guardar inmediatamente
         }
         catch (Exception e)
         {
